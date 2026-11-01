@@ -151,8 +151,12 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
 .plan ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .demo-band{background:var(--acc-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:.84rem;font-weight:700}
 .reader{width:100%;max-width:440px;aspect-ratio:4/3;background:#0b1210;border-radius:12px;overflow:hidden;display:grid;place-items:center;color:#cfe;position:relative;margin-inline:auto}
-.reader video{width:100%!important;height:100%!important;object-fit:cover}
+.reader video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.reader .aim{position:absolute;left:50%;top:50%;width:56%;aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.9);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.35);pointer-events:none;transition:border-color .15s}
+.reader .aim.hit{border-color:#5BD18C}
+.reader .tip{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:.8rem;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
 .reader .ph{padding:20px;text-align:center;font-size:.9rem;opacity:.85}
+#scanres{scroll-margin-top:170px}
 .scanok{border:2px solid var(--ok)} .scanwarn{border:2px solid var(--warn)} .scanbad{border:2px solid var(--bad)}
 .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:.92rem}
 .kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:700;overflow-wrap:anywhere}
@@ -510,7 +514,8 @@ function payer(m){S.payM=m||S.payM||"Wave";
 
 
 /* ---------- Scanner : DataMatrix GS1, QR code, code-barres ---------- */
-const LIB="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js";
+const LIB="https://cdn.jsdelivr.net/npm/barcode-detector@3.2.2/dist/iife/ponyfill.js",WASM="https://cdn.jsdelivr.net/npm/zxing-wasm@3.1.3/dist/reader/";
+const FORMATS=["data_matrix","qr_code","ean_13","ean_8","code_128"];
 function gsChk(b){let s=0;for(let i=0;i<b.length;i++)s+=(+b[b.length-1-i])*(i%2?1:3);return(10-s%10)%10}
 P.forEach(p=>{const b="0200999"+String(p.id).padStart(6,"0");p.gtin=b+gsChk(b);p.gtins=[]}); // codes fictifs (préfixe 200 = usage interne)
 const findGtin=g=>g&&P.find(p=>p.gtin===g||p.gtins.includes(g));
@@ -575,7 +580,6 @@ V.scanner=()=>head("Scanner","Photographiez le DataMatrix (le petit carré à po
       <div class="row"><button class="btn pri" data-act="camon" id="camon">Ouvrir la caméra</button><button class="btn" data-act="camoff" id="camoff" hidden>Arrêter</button>
         <label class="btn" id="photobtn" style="cursor:pointer">Prendre une photo du code<input type="file" id="scanfile" accept="image/*" capture="environment" hidden></label>
         <button class="btn" data-act="scanmanual">Pas de code : saisir à la main</button></div>
-      <div id="readerfile" hidden></div>
       <div><p class="lbl" style="margin-bottom:6px">Essayer sans caméra : boîtes d'exemple</p><div class="chips">${SAMPLES.map((x,i)=>`<button class="chip" data-sample="${i}">${x[0]}</button>`).join("")}</div></div>
     </section>
     <section class="panel" id="scanres" aria-live="polite"></section>
@@ -583,28 +587,50 @@ V.scanner=()=>head("Scanner","Photographiez le DataMatrix (le petit carré à po
   <section class="panel"><header><div><h2>Boîtes scannées</h2><p>Pour une pharmacie qui démarre sur papier : on scanne chaque rayon, le stock se crée avec ses dates.</p></div></header><div class="list" id="scanlist"></div></section>
   <p class="note-box">Le DataMatrix se lit sans internet et sans IA : c'est un format standard (GS1). Les boîtes sans code se saisissent à la main ; dans la version complète, une IA lira la mention « LOT… EXP… » imprimée sur la boîte, avec confirmation par le vendeur.</p>`;
 function scanAfter(){V_scanRes();V_scanList()}
-function onCode(raw,fmt){const r=lire(raw,fmt);S.cur=r;if(S.cam)try{S.cam.pause(true)}catch(e){}
+function onCode(raw,fmt){const r=lire(raw,fmt);S.cur=r;if(S.cam)S.cam.paused=true;
   if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}
   if(S.scanMode==="vente"&&r.p&&!(r.exp&&dj(r.exp)<0)&&!r.dup){if(addCart(r.p.id,true)){logScan(r,"Vendu","ok","ajouté au ticket");r.done=true;setTimeout(resumeCam,1500)}}
-  V_scanRes()}
+  V_scanRes();const rs=document.getElementById("scanres");if(rs&&window.innerWidth<980&&!(S.scanMode==="vente"&&r.done))rs.scrollIntoView({behavior:"smooth",block:"start"})}
 function logScan(r,st,c,txt){if(r.serie)S.serials.add(r.gtin+"|"+r.serie);S.scans.push({nom:(r.p||{}).nom||"Produit",st,c,txt:(r.lot?"lot "+r.lot:"")+(r.exp?" · exp. "+dfr(r.exp):"")+(txt?" · "+txt:"")});V_scanList()}
-function loadLib(){if(window.__Html5QrcodeLibrary__)return Promise.resolve(window.__Html5QrcodeLibrary__);
-  return new Promise((ok,ko)=>{const s=document.createElement("script");s.src=LIB;s.onload=()=>window.__Html5QrcodeLibrary__?ok(window.__Html5QrcodeLibrary__):ko();s.onerror=ko;document.head.appendChild(s)})}
-function camCfg(L){const F=L.Html5QrcodeSupportedFormats;return{formatsToSupport:[F.DATA_MATRIX,F.QR_CODE,F.EAN_13,F.EAN_8,F.CODE_128],experimentalFeatures:{useBarCodeDetectorIfSupported:true},verbose:false}}
-async function camOn(){const st=document.getElementById("camst");st.textContent="Ouverture de la caméra…";
-  try{const L=await loadLib();const el=document.getElementById("reader");el.innerHTML="";
-    const h=new L.Html5Qrcode("reader",camCfg(L));S.cam=h;
-    await h.start({facingMode:"environment"},{fps:10,qrbox:(w,hh)=>{const z=Math.floor(Math.min(w,hh)*.7);return{width:z,height:z}}},(t,res)=>onCode(t,res&&res.result&&res.result.format&&res.result.format.formatName),()=>{});
-    st.textContent="Visez le code, il est lu tout seul.";document.getElementById("camon").hidden=true;document.getElementById("camoff").hidden=false}
-  catch(e){S.cam=null;const el=document.getElementById("reader");if(el)el.innerHTML='<div class="ph">Caméra indisponible ici.</div>';
-    const ok=!!window.__Html5QrcodeLibrary__;st.textContent=ok?"La caméra en direct est bloquée sur cette page (c'est le cas dans claude.ai). Utilisez « Prendre une photo du code » : ça marche ici.":"Le lecteur n'a pas pu se charger (pas d'internet ?). Utilisez les boîtes d'exemple.";
-    if(el&&ok)el.innerHTML='<div class="ph">Touchez « Prendre une photo du code » ci-dessous,<br>puis photographiez le DataMatrix de près.</div>';
-    const pb=document.getElementById("photobtn");if(pb&&ok){pb.classList.add("pri");document.getElementById("camon").classList.remove("pri");pb.scrollIntoView({block:"center",behavior:"smooth"})}}}
-function stopCam(){const h=S.cam;S.cam=null;if(h){try{h.stop().then(()=>h.clear()).catch(()=>{})}catch(e){}}}
+/* Lecteur : BarcodeDetector natif s'il lit le DataMatrix (Android), sinon ZXing-C++ en WebAssembly (iPhone, ordinateur) */
+let DET=null;
+async function detector(){if(DET)return DET;
+  if("BarcodeDetector" in window){try{const f=await BarcodeDetector.getSupportedFormats();if(f.includes("data_matrix")){DET=new BarcodeDetector({formats:FORMATS.filter(x=>f.includes(x))});return DET}}catch(e){}}
+  if(!window.BarcodeDetectionAPI)await new Promise((ok,ko)=>{const s=document.createElement("script");s.src=LIB;s.onload=ok;s.onerror=ko;document.head.appendChild(s)});
+  const A=window.BarcodeDetectionAPI;A.setZXingModuleOverrides({locateFile:(f,pre)=>f.endsWith(".wasm")?WASM+f:pre+f});
+  DET=new A.BarcodeDetector({formats:FORMATS});return DET}
+const fmtName=f=>({data_matrix:"DataMatrix",qr_code:"QR code",ean_13:"EAN-13",ean_8:"EAN-8",code_128:"Code 128"}[f]||f||"");
+async function camOn(){const st=document.getElementById("camst"),el=document.getElementById("reader");st.textContent="Ouverture de la caméra…";
+  try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error("nocam");
+    const [det,stream]=await Promise.all([detector(),navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}})]);
+    if(S.view!=="scanner"){stream.getTracks().forEach(t=>t.stop());return}
+    el.innerHTML='<video playsinline muted autoplay></video><div class="aim" id="aim"></div><div class="tip">Le carré DataMatrix dans le cadre, à 10–15 cm, bien net</div>';
+    const v=el.querySelector("video");v.srcObject=stream;await v.play().catch(()=>{});
+    const tr=stream.getVideoTracks()[0];try{await tr.applyConstraints({advanced:[{focusMode:"continuous"}]})}catch(e){}
+    const cv=document.createElement("canvas"),cx=cv.getContext("2d",{willReadFrequently:true});
+    const cam={stream,v,paused:false,busy:false,n:0,timer:0};S.cam=cam;
+    const tick=async()=>{if(S.cam!==cam)return;
+      if(!cam.paused&&!cam.busy&&v.readyState>=2&&v.videoWidth){cam.busy=true;cam.n++;
+        try{const W=v.videoWidth,H=v.videoHeight;let sx=0,sy=0,sw=W,sh=H;
+          if(cam.n%2){const z=Math.round(Math.min(W,H)*.62);sx=(W-z)>>1;sy=(H-z)>>1;sw=sh=z}  // une image sur deux : le centre seulement
+          cv.width=sw;cv.height=sh;cx.drawImage(v,sx,sy,sw,sh,0,0,sw,sh);
+          const r=await det.detect(cv);if(r&&r.length&&S.cam===cam&&!cam.paused){const a=document.getElementById("aim");a&&a.classList.add("hit");setTimeout(()=>a&&a.classList.remove("hit"),600);onCode(r[0].rawValue,fmtName(r[0].format))}}
+        catch(e){}cam.busy=false}
+      cam.timer=setTimeout(tick,120)};
+    tick();
+    st.textContent="Visez le code : il est lu tout seul.";document.getElementById("camon").hidden=true;document.getElementById("camoff").hidden=false}
+  catch(e){stopCam();const camErr=e&&(e.name==="NotAllowedError"||e.name==="NotFoundError"||e.name==="NotReadableError"||e.name==="SecurityError"||e.message==="nocam");
+    if(el)el.innerHTML='<div class="ph">'+(camErr?"Touchez « Prendre une photo du code » ci-dessous,<br>puis photographiez le DataMatrix de près.":"Lecteur indisponible.")+'</div>';
+    st.textContent=camErr?"La caméra en direct est bloquée sur cette page (c'est le cas dans claude.ai, ou si l'accès a été refusé). Utilisez « Prendre une photo du code ».":"Le lecteur n'a pas pu se charger (pas d'internet ?). Utilisez les boîtes d'exemple.";
+    const pb=document.getElementById("photobtn");if(pb&&camErr){pb.classList.add("pri");document.getElementById("camon").classList.remove("pri")}}}
+function stopCam(){const c=S.cam;S.cam=null;if(c){clearTimeout(c.timer);try{c.stream.getTracks().forEach(t=>t.stop())}catch(e){}}}
 async function scanPhoto(file){const st=document.getElementById("camst");st.textContent="Lecture de la photo…";
-  try{const L=await loadLib();const h=new L.Html5Qrcode("readerfile",camCfg(L));const res=await h.scanFileV2(file,false);h.clear();
-    st.textContent="Code lu sur la photo.";onCode(res.decodedText,res.result&&res.result.format&&res.result.format.formatName)}
-  catch(e){st.textContent=window.__Html5QrcodeLibrary__?"Aucun code lu sur cette photo. Rapprochez-vous, avec une bonne lumière et le code bien net.":"Le lecteur n'a pas pu se charger (pas d'internet ?)."}}
+  try{const det=await detector();let img;try{img=await createImageBitmap(file)}catch(e){img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=URL.createObjectURL(file)})}
+    let r=await det.detect(img);
+    if(!r.length){const W=img.width,H=img.height,z=Math.round(Math.min(W,H)*.6),cv=document.createElement("canvas");cv.width=cv.height=z;cv.getContext("2d").drawImage(img,(W-z)>>1,(H-z)>>1,z,z,0,0,z,z);r=await det.detect(cv)}
+    if(!r.length){st.textContent="Aucun code lu sur cette photo. Rapprochez-vous (10–15 cm), avec une bonne lumière et le code bien net.";return}
+    st.textContent="Code lu sur la photo.";onCode(r[0].rawValue,fmtName(r[0].format))}
+  catch(e){st.textContent="Le lecteur n'a pas pu se charger (pas d'internet ?)."}}
 function scanAdd(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")||{}).value,p=pid&&byId(pid);if(!p){toast("Choisissez d'abord le produit.");return}
   const lot=document.getElementById("slot").value.trim(),exp=document.getElementById("sexp").value,q=Math.max(1,parseInt(document.getElementById("sq2").value)||1);
   if(!lot||!exp){toast("Indiquez le n° de lot et la date de péremption.");return}
@@ -615,7 +641,7 @@ function scanAdd(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")|
 function scanSell(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")||{}).value,p=pid&&byId(pid);if(!p){toast("Choisissez d'abord le produit.");return}
   if(!r.p&&r.gtin&&!findGtin(r.gtin))p.gtins.push(r.gtin);r.p=p;
   if(addCart(p.id,true)){logScan(r,"Vendu","ok","ajouté au ticket");toast(`${p.nom} ajouté au ticket.`);S.cur=null;V_scanRes();resumeCam()}}
-function resumeCam(){if(S.cam)try{S.cam.resume()}catch(e){}}
+function resumeCam(){if(S.cam)S.cam.paused=false}
 
 /* ---------- Événements ---------- */
 document.addEventListener("click",e=>{const t=e.target.closest("button,[data-prod],[data-close]");if(!t)return;const d=t.dataset;
