@@ -573,7 +573,7 @@ V.scanner=()=>head("Scanner","Photographiez le DataMatrix (le petit carré à po
     <section class="panel"><header><div><h2>Caméra</h2><p id="camst">Visez le code, il est lu tout seul.</p></div></header>
       <div class="reader" id="reader"><div class="ph">La caméra s'ouvre ici.<br>Sur ordinateur, utilisez les boîtes d'exemple.</div></div>
       <div class="row"><button class="btn pri" data-act="camon" id="camon">Ouvrir la caméra</button><button class="btn" data-act="camoff" id="camoff" hidden>Arrêter</button>
-        <label class="btn" style="cursor:pointer">Prendre une photo du code<input type="file" id="scanfile" accept="image/*" capture="environment" hidden></label>
+        <label class="btn" id="photobtn" style="cursor:pointer">Prendre une photo du code<input type="file" id="scanfile" accept="image/*" capture="environment" hidden></label>
         <button class="btn" data-act="scanmanual">Pas de code : saisir à la main</button></div>
       <div id="readerfile" hidden></div>
       <div><p class="lbl" style="margin-bottom:6px">Essayer sans caméra : boîtes d'exemple</p><div class="chips">${SAMPLES.map((x,i)=>`<button class="chip" data-sample="${i}">${x[0]}</button>`).join("")}</div></div>
@@ -597,7 +597,9 @@ async function camOn(){const st=document.getElementById("camst");st.textContent=
     await h.start({facingMode:"environment"},{fps:10,qrbox:(w,hh)=>{const z=Math.floor(Math.min(w,hh)*.7);return{width:z,height:z}}},(t,res)=>onCode(t,res&&res.result&&res.result.format&&res.result.format.formatName),()=>{});
     st.textContent="Visez le code, il est lu tout seul.";document.getElementById("camon").hidden=true;document.getElementById("camoff").hidden=false}
   catch(e){S.cam=null;const el=document.getElementById("reader");if(el)el.innerHTML='<div class="ph">Caméra indisponible ici.</div>';
-    st.textContent=window.__Html5QrcodeLibrary__?"Caméra refusée ou indisponible sur cette page. Utilisez « Prendre une photo du code », ou ouvrez la démo depuis votre téléphone.":"Le lecteur n'a pas pu se charger (pas d'internet ?). Utilisez les boîtes d'exemple."}}
+    const ok=!!window.__Html5QrcodeLibrary__;st.textContent=ok?"La caméra en direct est bloquée sur cette page (c'est le cas dans claude.ai). Utilisez « Prendre une photo du code » : ça marche ici.":"Le lecteur n'a pas pu se charger (pas d'internet ?). Utilisez les boîtes d'exemple.";
+    if(el&&ok)el.innerHTML='<div class="ph">Touchez « Prendre une photo du code » ci-dessous,<br>puis photographiez le DataMatrix de près.</div>';
+    const pb=document.getElementById("photobtn");if(pb&&ok){pb.classList.add("pri");document.getElementById("camon").classList.remove("pri");pb.scrollIntoView({block:"center",behavior:"smooth"})}}}
 function stopCam(){const h=S.cam;S.cam=null;if(h){try{h.stop().then(()=>h.clear()).catch(()=>{})}catch(e){}}}
 async function scanPhoto(file){const st=document.getElementById("camst");st.textContent="Lecture de la photo…";
   try{const L=await loadLib();const h=new L.Html5Qrcode("readerfile",camCfg(L));const res=await h.scanFileV2(file,false);h.clear();
