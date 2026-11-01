@@ -150,6 +150,13 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
 .plan .price{font-family:var(--display);font-size:2.2rem;font-weight:700;line-height:1}
 .plan ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .demo-band{background:var(--acc-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:.84rem;font-weight:700}
+.reader{width:100%;max-width:440px;aspect-ratio:4/3;background:#0b1210;border-radius:12px;overflow:hidden;display:grid;place-items:center;color:#cfe;position:relative;margin-inline:auto}
+.reader video{width:100%!important;height:100%!important;object-fit:cover}
+.reader .ph{padding:20px;text-align:center;font-size:.9rem;opacity:.85}
+.scanok{border:2px solid var(--ok)} .scanwarn{border:2px solid var(--warn)} .scanbad{border:2px solid var(--bad)}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:.92rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.raw{font-family:var(--mono);font-size:.75rem;background:var(--sunk);padding:6px 8px;border-radius:6px;word-break:break-all;color:var(--muted)}
 .muted{color:var(--muted)}
 .empty{color:var(--muted);font-size:.9rem;padding:8px 0}
 .lot{font-family:var(--mono);font-size:.82rem}
@@ -276,15 +283,15 @@ function sortie(p,q){for(const l of live(p)){const t=Math.min(l.q,q);l.q-=t;q-=t
 
 /* ---------- Navigation ---------- */
 function navItems(){const per=perimes().length+sous(0,30).length,sg=sugList().length,rec=S.orders.filter(o=>o.st==="attente").length;
-  const all=[["accueil","Tableau de bord"],["caisse","Caisse"],["stock","Stock"],["peremption","Péremptions",per],["commandes","Commandes",sg+rec],["inventaire","Inventaire"],["abonnement","Abonnement"]];
-  return S.role==="vendeur"?all.filter(i=>["caisse","stock","peremption"].includes(i[0])):all}
+  const all=[["accueil","Tableau de bord"],["caisse","Caisse"],["scanner","Scanner"],["stock","Stock"],["peremption","Péremptions",per],["commandes","Commandes",sg+rec],["inventaire","Inventaire"],["abonnement","Abonnement"]];
+  return S.role==="vendeur"?all.filter(i=>["caisse","scanner","stock","peremption"].includes(i[0])):all}
 function nav(){const items=navItems();if(!items.some(i=>i[0]===S.view))S.view=items[0][0];
   document.getElementById("nav").innerHTML=items.map(([k,l,n])=>`<button data-go="${k}" ${S.view===k?'aria-current="page"':""}><span>${l}</span>${n?`<span class="pill">${n}</span>`:""}</button>`).join("")}
 function toast(t){document.querySelectorAll(".toast").forEach(x=>x.remove());const el=document.createElement("div");el.className="toast";el.setAttribute("role","status");el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),3400)}
 function closeLayer(){document.getElementById("layer").innerHTML=""}
 function layer(html,center){document.getElementById("layer").innerHTML=`<div class="overlay ${center?"center":""}" data-close="1">${html}</div>`;const f=document.querySelector("#layer .x");f&&f.focus()}
-function render(keepScroll){nav();const y=window.scrollY;document.getElementById("main").innerHTML=V[S.view]();
-  if(S.view==="stock")fillStock();if(S.view==="caisse")fillRes();if(S.view==="inventaire")invTotals();window.scrollTo(0,keepScroll?y:0)}
+function render(keepScroll){stopCam();nav();const y=window.scrollY;document.getElementById("main").innerHTML=V[S.view]();
+  if(S.view==="stock")fillStock();if(S.view==="caisse")fillRes();if(S.view==="inventaire")invTotals();if(S.view==="scanner")scanAfter();window.scrollTo(0,keepScroll?y:0)}
 function go(v){S.view=v;S.q="";closeLayer();render()}
 const head=(t,s,right="")=>`<div class="top"><div><h1>${t}</h1><p>${s}</p></div><div class="row">${right}</div></div>`;
 const bubble=(t,h="07:30",cls="")=>`<div class="bubble ${cls}">${esc(t)}<span class="t">${h}</span></div>`;
@@ -343,7 +350,7 @@ Bonjour Dr Ndiaye. Hier : ${fmt(S.hist[12])} de ventes.
 Ouvrir : garab.sn/app`}
 
 V.caisse=()=>{const top=[1,24,6,9,2,18,16,26];
-  return head("Caisse","Les lots qui périment en premier sortent en premier. Un lot périmé ne peut pas être vendu.")+
+  return head("Caisse","Les lots qui périment en premier sortent en premier. Un lot périmé ne peut pas être vendu.",`<button class="btn" data-go="scanner" data-mode="vente">Scanner une boîte</button>`)+
   `<div class="grid2">
     <section class="panel">
       <input type="search" id="cq" class="search" placeholder="Nom du médicament, ou scannez le code-barres" value="${esc(S.q)}" autocomplete="off" aria-label="Rechercher un produit">
@@ -370,8 +377,8 @@ function fillRes(){const q=S.q.trim().toLowerCase(),el=document.getElementById("
     const tags=(l&&(l.prio||dj(l.exp)<90)?` <span class="st acc">À vendre en priorité</span>`:"")+(d?` <span class="st bad">${d} lot périmé bloqué</span>`:"");
     return `<tr><td><b>${p.nom}</b>${tags}<small>${p.pres}${l?` · lot ${l.n}, exp. ${dfr(l.exp)}`:""}</small></td><td class="r num">${s}</td><td class="r num">${fmt(p.pv)}</td>
     <td class="r">${s>inCart?`<button class="btn sm" data-add="${p.id}">Ajouter</button>`:`<span class="st bad">${s?"Plus de stock":"Rupture"}</span>`}</td></tr>`}).join("")||`<tr><td colspan="4" class="empty">Aucun produit pour « ${esc(S.q)} ».</td></tr>`}
-function addCart(pid){const p=byId(pid),c=S.cart.find(x=>x.pid===p.id),q=c?c.q:0;if(q>=stock(p)){toast(stock(p)?`Plus que ${stock(p)} en stock.`:`${p.nom} : rupture de stock.`);return}
-  c?c.q++:S.cart.push({pid:p.id,q:1});render(true)}
+function addCart(pid,silent){const p=byId(pid),c=S.cart.find(x=>x.pid===p.id),q=c?c.q:0;if(q>=stock(p)){toast(stock(p)?`Plus que ${stock(p)} en stock.`:`${p.nom} : rupture de stock.`);return false}
+  c?c.q++:S.cart.push({pid:p.id,q:1});if(silent){nav();return true}render(true)}
 function encaisser(){const tot=S.cart.reduce((s,c)=>s+c.q*byId(c.pid).pv,0),now=new Date(),h=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
   const low=[];S.cart.forEach(c=>{const p=byId(c.pid);sortie(p,c.q);if(etat(p)[1]!=="ok")low.push(p.nom)});
   S.sales.push({h,items:S.cart.map(c=>({pid:c.pid,q:c.q,pv:byId(c.pid).pv})),tot,mode:S.pay});S.cart=[];S.q="";render();
@@ -501,10 +508,117 @@ function payer(m){S.payM=m||S.payM||"Wave";
   <p class="muted">Vous recevez une demande de validation sur votre téléphone. Le reçu arrive par WhatsApp.</p>
   <div class="row"><button class="btn pri" data-act="paye">Payer 15 000 F</button><button class="btn" data-close="1">Annuler</button></div></div>`,true)}
 
+
+/* ---------- Scanner : DataMatrix GS1, QR code, code-barres ---------- */
+const LIB="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js";
+function gsChk(b){let s=0;for(let i=0;i<b.length;i++)s+=(+b[b.length-1-i])*(i%2?1:3);return(10-s%10)%10}
+P.forEach(p=>{const b="0200999"+String(p.id).padStart(6,"0");p.gtin=b+gsChk(b);p.gtins=[]}); // codes fictifs (préfixe 200 = usage interne)
+const findGtin=g=>g&&P.find(p=>p.gtin===g||p.gtins.includes(g));
+S.scanMode="entree";S.scans=[];S.serials=new Set();S.cur=null;S.cam=null;
+function gs1(raw){let s=String(raw).trim().replace(/^\](d2|C1|Q3|e0)/,"").replace(/^\x1D/,"");
+  if(s.startsWith("(")){const o={};s.replace(/\((\d{2,4})\)([^(]*)/g,(m,a,v)=>{o[a]=v.trim()});return Object.keys(o).length?o:null}
+  if(!/^(00|01|02|10|11|17|21)\d/.test(s))return null;
+  const FIX={"00":18,"01":14,"02":14,"11":6,"12":6,"13":6,"15":6,"16":6,"17":6,"20":2},o={};let i=0;
+  while(i<s.length){const a2=s.substr(i,2);
+    if(FIX[a2]){o[a2]=s.substr(i+2,FIX[a2]);i+=2+FIX[a2];continue}
+    let ai=["240","241","710","711","712","713","714"].find(a=>s.startsWith(a,i))||(["10","21","22"].includes(a2)?a2:null);
+    if(!ai)break;const st=i+ai.length;let e=s.indexOf("\x1D",st);if(e<0)e=s.length;o[ai]=s.slice(st,e);i=e+1}
+  return o["01"]||o["17"]||o["10"]?o:null}
+function gsDate(v){if(!/^\d{6}$/.test(v||""))return"";const y=2000+ +v.slice(0,2),m=+v.slice(2,4);let d=+v.slice(4,6);if(!d)d=new Date(y,m,0).getDate();
+  return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0")}
+function lire(raw,fmt){const r={raw,fmt:fmt||"",gtin:"",lot:"",exp:"",serie:""},g=gs1(raw);
+  if(g){r.kind="DataMatrix GS1";r.gtin=g["01"]||"";r.lot=g["10"]||"";r.exp=gsDate(g["17"]);r.serie=g["21"]||""}
+  else if(/^\d{8}$|^\d{12,14}$/.test(raw)){r.kind="Code-barres";r.gtin=raw.padStart(14,"0")}
+  else r.kind="Autre code";
+  r.p=findGtin(r.gtin);r.dup=!!(r.serie&&S.serials.has(r.gtin+"|"+r.serie));return r}
+function V_scanRes(){const r=S.cur,el=document.getElementById("scanres");if(!el)return;
+  if(!r){el.innerHTML=`<p class="empty">Scannez une boîte : le produit, le lot et la date s'affichent ici.</p>`;el.className="panel";return}
+  const d=r.exp?dj(r.exp):null,bad=d!=null&&d<0,warn=d!=null&&d>=0&&d<180,m=S.scanMode;
+  const lotEnStock=r.p&&r.lot?r.p.lots.find(l=>l.n===r.lot&&l.q>0):null;
+  const msgs=[];
+  if(r.dup)msgs.push(["bad",`Cette boîte (n° de série ${esc(r.serie)}) a déjà été scannée. Double saisie, ou boîte suspecte (contrefaçon) : vérifiez.`]);
+  if(bad)msgs.push(["bad",`Périmé depuis ${-d} jours. ${m==="vente"?"Vente bloquée.":"Refusez ce lot ou mettez-le en destruction."}`]);
+  else if(warn)msgs.push(["warn",`Péremption courte : dans ${d} jours.${m==="entree"?" Vous pouvez refuser ce lot ou négocier un retour.":""}`]);
+  if(r.kind==="Code-barres")msgs.push(["warn","Code-barres simple : il donne le produit, mais pas le lot ni la date. Saisissez-les ci-dessous."]);
+  if(r.kind==="DataMatrix GS1"&&(!r.lot||!r.exp))msgs.push(["warn","Ce DataMatrix ne contient pas "+(!r.lot&&!r.exp?"le lot ni la date":!r.lot?"le n° de lot":"la date")+" : complétez à la main."]);
+  if(!r.p&&r.kind!=="Autre code"&&!r.manual)msgs.push(["warn","Code inconnu dans votre stock. Choisissez le produit : Garab retiendra ce code pour les prochaines fois."]);
+  if(r.kind==="Autre code")msgs.push(["warn","Ce code n'est pas un code de médicament (GS1). Choisissez le produit à la main."]);
+  el.className="panel "+(bad||r.dup?"scanbad":msgs.length?"scanwarn":"scanok");
+  const sel=`<select id="sp" aria-label="Produit"><option value="">— Choisir le produit —</option>${P.map(p=>`<option value="${p.id}" ${r.p===p?"selected":""}>${p.nom} · ${p.pres}</option>`).join("")}</select>`;
+  el.innerHTML=`<header><div><h2>${r.p?r.p.nom:r.manual?"Saisie manuelle":"Produit à identifier"}</h2><p>${r.p?r.p.pres+" · "+r.p.cat:r.kind}${r.fmt?" · lu : "+r.fmt.replace("_"," "):""}</p></div>
+    ${r.p&&r.exp?(bad?'<span class="st bad">Périmé</span>':warn?`<span class="st warn">Dans ${d} j</span>`:'<span class="st ok">Date OK</span>'):""}</header>
+  ${msgs.map(([c,t])=>`<p class="st ${c}" style="white-space:normal;border-radius:8px;padding:8px 10px;font-size:.85rem">${t}</p>`).join("")}
+  <dl class="kv">${r.gtin?`<dt>Code produit</dt><dd class="num">${r.gtin}</dd>`:""}${r.serie?`<dt>N° de série</dt><dd class="num">${esc(r.serie)}</dd>`:""}
+    ${r.p&&m!=="entree"?`<dt>En stock</dt><dd>${stock(r.p)} boîtes${lotEnStock?` · dont ${lotEnStock.q} de ce lot`:r.lot?" · ce lot n'est pas dans votre stock":""}</dd><dt>Prix</dt><dd>${fmt(r.p.pv)}</dd>`:""}</dl>
+  ${!r.p?`<div class="field"><label for="sp">Produit</label>${sel}</div>`:""}
+  ${m!=="vente"?`<div class="row">
+    <div class="field"><label for="slot">N° de lot</label><input type="text" id="slot" class="lotin" value="${esc(r.lot)}" style="width:140px"></div>
+    <div class="field"><label for="sexp">Péremption</label><input type="date" id="sexp" value="${r.exp}"></div>
+    ${m==="entree"?`<div class="field"><label for="sq2">Boîtes identiques</label><input type="number" id="sq2" class="qin" min="1" value="1"></div>`:""}</div>`:""}
+  <div class="row">${m==="entree"?`<button class="btn pri" data-act="scanadd" ${bad?"disabled":""}>Ajouter au stock</button>`:m==="vente"?`${r.done?'<span class="st ok">Ajouté au ticket ✓</span>':`<button class="btn pri" data-act="scansell" ${bad||r.dup?"disabled":""}>Ajouter au ticket</button>`}<button class="btn" data-go="caisse">Voir le ticket (${S.cart.reduce((a,c)=>a+c.q,0)})</button>`:`<button class="btn" data-act="scanmode" data-m="entree">Entrer en stock</button><button class="btn" data-act="scanmode" data-m="vente">Vendre</button>`}
+    <button class="btn" data-act="scannext">Boîte suivante</button></div>
+  <details><summary class="muted" style="cursor:pointer;font-size:.82rem">Contenu brut du code</summary><p class="raw">${esc(r.raw).replace(/\x1D/g,"<b>⟨GS⟩</b>")||"—"}</p></details>`}
+function V_scanList(){const el=document.getElementById("scanlist");if(!el)return;
+  el.innerHTML=S.scans.length?S.scans.slice().reverse().map(x=>`<div class="li"><div class="grow"><b>${x.nom}</b><small>${x.txt}</small></div><span class="st ${x.c}">${x.st}</span></div>`).join(""):'<p class="empty">Aucune boîte scannée pour l\'instant.</p>'}
+const SAMPLES=[
+  ["Coartem · DataMatrix complet",()=>"01"+byId(6).gtin+"17270930"+"10CT1188\x1D21"+"8K2F9QX41"],
+  ["Amoxicilline · péremption courte",()=>"01"+byId(9).gtin+"17261205"+"10AM702\x1D21"+"A77TQ0P2"],
+  ["Diclofénac · lot périmé",()=>"01"+byId(4).gtin+"17261015"+"10DC118\x1D21"+"Z1Y8C3"],
+  ["Paracétamol · code-barres simple",()=>byId(1).gtin.slice(1)],
+  ["Boîte inconnue · DataMatrix",()=>"01"+(b=>b+gsChk(b))("0200999999999")+"172805001011B42\x1D21"+"NEW0001"],
+  ["Même Coartem scanné 2 fois",()=>"01"+byId(6).gtin+"17270930"+"10CT1188\x1D21"+"8K2F9QX41"]];
+V.scanner=()=>head("Scanner","Photographiez le DataMatrix (le petit carré à points) : produit, n° de lot et date de péremption se remplissent seuls. Fonctionne aussi avec les QR codes et les codes-barres.")+
+  `<div class="seg" role="group" aria-label="Que faire de la boîte ?">${[["entree","Entrée en stock"],["vente","Vente"],["verif","Vérifier une boîte"]].map(([k,l])=>`<button data-smode="${k}" aria-pressed="${S.scanMode===k}">${l}</button>`).join("")}</div>
+  <div class="grid2 eq">
+    <section class="panel"><header><div><h2>Caméra</h2><p id="camst">Visez le code, il est lu tout seul.</p></div></header>
+      <div class="reader" id="reader"><div class="ph">La caméra s'ouvre ici.<br>Sur ordinateur, utilisez les boîtes d'exemple.</div></div>
+      <div class="row"><button class="btn pri" data-act="camon" id="camon">Ouvrir la caméra</button><button class="btn" data-act="camoff" id="camoff" hidden>Arrêter</button>
+        <label class="btn" style="cursor:pointer">Prendre une photo du code<input type="file" id="scanfile" accept="image/*" capture="environment" hidden></label>
+        <button class="btn" data-act="scanmanual">Pas de code : saisir à la main</button></div>
+      <div id="readerfile" hidden></div>
+      <div><p class="lbl" style="margin-bottom:6px">Essayer sans caméra : boîtes d'exemple</p><div class="chips">${SAMPLES.map((x,i)=>`<button class="chip" data-sample="${i}">${x[0]}</button>`).join("")}</div></div>
+    </section>
+    <section class="panel" id="scanres" aria-live="polite"></section>
+  </div>
+  <section class="panel"><header><div><h2>Boîtes scannées</h2><p>Pour une pharmacie qui démarre sur papier : on scanne chaque rayon, le stock se crée avec ses dates.</p></div></header><div class="list" id="scanlist"></div></section>
+  <p class="note-box">Le DataMatrix se lit sans internet et sans IA : c'est un format standard (GS1). Les boîtes sans code se saisissent à la main ; dans la version complète, une IA lira la mention « LOT… EXP… » imprimée sur la boîte, avec confirmation par le vendeur.</p>`;
+function scanAfter(){V_scanRes();V_scanList()}
+function onCode(raw,fmt){const r=lire(raw,fmt);S.cur=r;if(S.cam)try{S.cam.pause(true)}catch(e){}
+  if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}
+  if(S.scanMode==="vente"&&r.p&&!(r.exp&&dj(r.exp)<0)&&!r.dup){if(addCart(r.p.id,true)){logScan(r,"Vendu","ok","ajouté au ticket");r.done=true;setTimeout(resumeCam,1500)}}
+  V_scanRes()}
+function logScan(r,st,c,txt){if(r.serie)S.serials.add(r.gtin+"|"+r.serie);S.scans.push({nom:(r.p||{}).nom||"Produit",st,c,txt:(r.lot?"lot "+r.lot:"")+(r.exp?" · exp. "+dfr(r.exp):"")+(txt?" · "+txt:"")});V_scanList()}
+function loadLib(){if(window.__Html5QrcodeLibrary__)return Promise.resolve(window.__Html5QrcodeLibrary__);
+  return new Promise((ok,ko)=>{const s=document.createElement("script");s.src=LIB;s.onload=()=>window.__Html5QrcodeLibrary__?ok(window.__Html5QrcodeLibrary__):ko();s.onerror=ko;document.head.appendChild(s)})}
+function camCfg(L){const F=L.Html5QrcodeSupportedFormats;return{formatsToSupport:[F.DATA_MATRIX,F.QR_CODE,F.EAN_13,F.EAN_8,F.CODE_128],experimentalFeatures:{useBarCodeDetectorIfSupported:true},verbose:false}}
+async function camOn(){const st=document.getElementById("camst");st.textContent="Ouverture de la caméra…";
+  try{const L=await loadLib();const el=document.getElementById("reader");el.innerHTML="";
+    const h=new L.Html5Qrcode("reader",camCfg(L));S.cam=h;
+    await h.start({facingMode:"environment"},{fps:10,qrbox:(w,hh)=>{const z=Math.floor(Math.min(w,hh)*.7);return{width:z,height:z}}},(t,res)=>onCode(t,res&&res.result&&res.result.format&&res.result.format.formatName),()=>{});
+    st.textContent="Visez le code, il est lu tout seul.";document.getElementById("camon").hidden=true;document.getElementById("camoff").hidden=false}
+  catch(e){S.cam=null;const el=document.getElementById("reader");if(el)el.innerHTML='<div class="ph">Caméra indisponible ici.</div>';
+    st.textContent=window.__Html5QrcodeLibrary__?"Caméra refusée ou indisponible sur cette page. Utilisez « Prendre une photo du code », ou ouvrez la démo depuis votre téléphone.":"Le lecteur n'a pas pu se charger (pas d'internet ?). Utilisez les boîtes d'exemple."}}
+function stopCam(){const h=S.cam;S.cam=null;if(h){try{h.stop().then(()=>h.clear()).catch(()=>{})}catch(e){}}}
+async function scanPhoto(file){const st=document.getElementById("camst");st.textContent="Lecture de la photo…";
+  try{const L=await loadLib();const h=new L.Html5Qrcode("readerfile",camCfg(L));const res=await h.scanFileV2(file,false);h.clear();
+    st.textContent="Code lu sur la photo.";onCode(res.decodedText,res.result&&res.result.format&&res.result.format.formatName)}
+  catch(e){st.textContent=window.__Html5QrcodeLibrary__?"Aucun code lu sur cette photo. Rapprochez-vous, avec une bonne lumière et le code bien net.":"Le lecteur n'a pas pu se charger (pas d'internet ?)."}}
+function scanAdd(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")||{}).value,p=pid&&byId(pid);if(!p){toast("Choisissez d'abord le produit.");return}
+  const lot=document.getElementById("slot").value.trim(),exp=document.getElementById("sexp").value,q=Math.max(1,parseInt(document.getElementById("sq2").value)||1);
+  if(!lot||!exp){toast("Indiquez le n° de lot et la date de péremption.");return}
+  if(dj(exp)<0){toast("Lot périmé : il ne peut pas entrer en stock.");return}
+  let learned="";if(!r.p&&r.gtin&&!findGtin(r.gtin)){p.gtins.push(r.gtin);learned=" Code retenu pour ce produit."}
+  const l=p.lots.find(x=>x.n===lot&&x.exp===exp);l?l.q+=q:p.lots.push({n:lot,exp,q,prio:false});r.p=p;
+  logScan(r,"+"+q+" en stock","ok","");S.cur=null;nav();V_scanRes();resumeCam();toast(`${q} × ${p.nom} (lot ${lot}, exp. ${dfr(exp)}) ajouté au stock.${learned}`)}
+function scanSell(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")||{}).value,p=pid&&byId(pid);if(!p){toast("Choisissez d'abord le produit.");return}
+  if(!r.p&&r.gtin&&!findGtin(r.gtin))p.gtins.push(r.gtin);r.p=p;
+  if(addCart(p.id,true)){logScan(r,"Vendu","ok","ajouté au ticket");toast(`${p.nom} ajouté au ticket.`);S.cur=null;V_scanRes();resumeCam()}}
+function resumeCam(){if(S.cam)try{S.cam.resume()}catch(e){}}
+
 /* ---------- Événements ---------- */
 document.addEventListener("click",e=>{const t=e.target.closest("button,[data-prod],[data-close]");if(!t)return;const d=t.dataset;
   if(d.close&&(e.target===t)){closeLayer();return}
-  if(d.go){if(d.tab)S.perTab=d.tab;go(d.go);return}
+  if(d.go){if(d.tab)S.perTab=d.tab;if(d.mode)S.scanMode=d.mode;go(d.go);return}
   if(d.prod){fiche(d.prod);return}
   if(d.add){addCart(d.add);return}
   if(d.q){const[pid,s]=d.q.split("|"),c=S.cart.find(x=>x.pid===+pid);if(+s>0)return addCart(pid);c.q--;if(!c.q)S.cart=S.cart.filter(x=>x!==c);render(true);return}
@@ -519,7 +633,16 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(d.retire){const{p,l}=findLot(d.retire);S.pertes.push({p,n:l.n,q:l.q,v:l.q*p.pa});toast(`Lot ${l.n} retiré : ${l.q} × ${p.nom} mis en destruction (${fmt(l.q*p.pa)}).`);l.q=0;render(true);return}
   if(d.retour){const{p,l}=findLot(d.retour);S.avoirs.push({p,n:l.n,q:l.q,v:l.q*p.pa});toast(`Retour préparé : ${l.q} × ${p.nom} chez ${FOUR[p.f].n}. Avoir attendu : ${fmt(l.q*p.pa)}.`);l.q=0;render(true);return}
   if(d.prio){const{p,l}=findLot(d.prio);l.prio=!l.prio;render(true);toast(l.prio?`${p.nom} (lot ${l.n}) sera proposé en premier au comptoir.`:"Priorité retirée.");return}
+  if(d.smode){S.scanMode=d.smode;document.querySelectorAll("[data-smode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.smode===S.scanMode));V_scanRes();return}
+  if(d.sample){onCode(SAMPLES[+d.sample][1](),"exemple");return}
   const a=d.act;if(!a)return;
+  if(a==="camon")return camOn();
+  if(a==="camoff"){stopCam();document.getElementById("reader").innerHTML='<div class="ph">Caméra arrêtée.</div>';document.getElementById("camon").hidden=false;document.getElementById("camoff").hidden=true;return}
+  if(a==="scanadd")return scanAdd();
+  if(a==="scansell")return scanSell();
+  if(a==="scannext"){S.cur=null;V_scanRes();resumeCam();return}
+  if(a==="scanmanual"){S.cur={raw:"",kind:"Saisie manuelle",manual:true,gtin:"",lot:"",exp:"",serie:"",p:null};V_scanRes();return}
+  if(a==="scanmode"){S.scanMode=d.m;document.querySelectorAll("[data-smode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.smode===S.scanMode));V_scanRes();return}
   if(a==="encaisser")return encaisser();
   if(a==="vider"){S.cart=[];render(true);return}
   if(a==="import")return toast("Envoyez votre fichier Excel ou l'export de votre ancien logiciel : on l'importe pour vous, gratuitement.");
@@ -542,7 +665,9 @@ document.addEventListener("change",e=>{const t=e.target;
   if(t.dataset.cq){render(true);return}
   if(t.id==="scat"){S.fcat=t.value;fillStock();return}
   if(t.id==="sst"){S.fst=t.value;fillStock();return}
-  if(t.id==="icat"){S.invCat=t.value;render(true);return}});
+  if(t.id==="icat"){S.invCat=t.value;render(true);return}
+  if(t.id==="scanfile"&&t.files[0]){scanPhoto(t.files[0]);t.value="";return}
+  if(t.id==="sp"&&S.cur){S.cur.p=byId(t.value)||null;const lot=(document.getElementById("slot")||{}).value,exp=(document.getElementById("sexp")||{}).value;if(lot!=null){S.cur.lot=lot;S.cur.exp=exp}V_scanRes()}});
 render();
 </script>
 </body>
