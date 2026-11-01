@@ -197,7 +197,7 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
       </select>
     </div>
     <nav class="nav" id="nav" aria-label="Sections"></nav>
-    <div class="foot">Pharmacie Keur Garab (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.</div>
+    <div class="foot">Pharmacie Keur Garab (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 5 · scanner ZXing</div>
   </aside>
   <main id="main"></main>
 </div>
@@ -575,7 +575,7 @@ const SAMPLES=[
 V.scanner=()=>head("Scanner","Photographiez le DataMatrix (le petit carré à points) : produit, n° de lot et date de péremption se remplissent seuls. Fonctionne aussi avec les QR codes et les codes-barres.")+
   `<div class="seg" role="group" aria-label="Que faire de la boîte ?">${[["entree","Entrée en stock"],["vente","Vente"],["verif","Vérifier une boîte"]].map(([k,l])=>`<button data-smode="${k}" aria-pressed="${S.scanMode===k}">${l}</button>`).join("")}</div>
   <div class="grid2 eq">
-    <section class="panel"><header><div><h2>Caméra</h2><p id="camst">Visez le code, il est lu tout seul.</p></div></header>
+    <section class="panel"><header><div><h2>Caméra <span class="st n" style="vertical-align:3px">v5</span></h2><p id="camst">Visez le code, il est lu tout seul.</p></div></header>
       <div class="reader" id="reader"><div class="ph">La caméra s'ouvre ici.<br>Sur ordinateur, utilisez les boîtes d'exemple.</div></div>
       <div class="row"><button class="btn pri" data-act="camon" id="camon">Ouvrir la caméra</button><button class="btn" data-act="camoff" id="camoff" hidden>Arrêter</button>
         <label class="btn" id="photobtn" style="cursor:pointer">Prendre une photo du code<input type="file" id="scanfile" accept="image/*" capture="environment" hidden></label>
