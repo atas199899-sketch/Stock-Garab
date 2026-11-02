@@ -633,6 +633,10 @@ const FORMATS=["data_matrix","qr_code","ean_13","ean_8","code_128"];
 function gsChk(b){let s=0;for(let i=0;i<b.length;i++)s+=(+b[b.length-1-i])*(i%2?1:3);return(10-s%10)%10}
 P.forEach(p=>{const b="0200999"+String(p.id).padStart(6,"0");p.gtin=b+gsChk(b);p.gtins=[]}); // codes fictifs (préfixe 200 = usage interne)
 const findGtin=g=>g&&P.find(p=>p.gtin===g||p.gtins.includes(g));
+/* Base publique des médicaments (France) : code CIP13 -> [nom, forme, présentation], construite par GitHub Actions */
+const MEDURL=/github\.io$/.test(location.hostname)?"medicaments.json":"https://atas199899-sketch.github.io/Stock-Garab/medicaments.json";
+let MEDP=null;const loadMed=()=>MEDP||(MEDP=fetch(MEDURL).then(r=>r.ok?r.json():null).catch(()=>null));
+const cipOf=g=>g&&g.length===14&&g.startsWith("0340")?g.slice(1):null;
 S.scanMode="entree";S.scans=[];S.serials=new Set();S.cur=null;S.cam=null;
 function gs1(raw){let s=String(raw).trim().replace(/^\](d2|C1|Q3|e0)/,"").replace(/^\x1D/,"");
   if(s.startsWith("(")){const o={};s.replace(/\((\d{2,4})\)([^(]*)/g,(m,a,v)=>{o[a]=v.trim()});return Object.keys(o).length?o:null}
@@ -660,21 +664,27 @@ function V_scanRes(){const r=S.cur,el=document.getElementById("scanres");if(!el)
   else if(warn)msgs.push(["warn",`Péremption courte : dans ${d} jours.${m==="entree"?" Vous pouvez refuser ce lot ou négocier un retour.":""}`]);
   if(r.kind==="Code-barres")msgs.push(["warn","Code-barres simple : il donne le produit, mais pas le lot ni la date. Saisissez-les ci-dessous."]);
   if(r.kind==="DataMatrix GS1"&&(!r.lot||!r.exp))msgs.push(["warn","Ce DataMatrix ne contient pas "+(!r.lot&&!r.exp?"le lot ni la date":!r.lot?"le n° de lot":"la date")+" : complétez à la main."]);
-  if(!r.p&&r.kind!=="Autre code"&&!r.manual)msgs.push(["warn","Code inconnu dans votre stock. Choisissez le produit : Garab retiendra ce code pour les prochaines fois."]);
+  if(!r.p&&r.medLoading)msgs.push(["n","Recherche du nom dans la base des médicaments…"]);
+  else if(!r.p&&r.med)msgs.push(["ok",m==="entree"?"Trouvé dans la base publique des médicaments. Pas encore dans votre stock : indiquez le prix de vente, Garab crée la fiche.":m==="vente"?"Trouvé dans la base des médicaments, mais pas dans votre stock : faites d'abord « Entrée en stock ».":"Trouvé dans la base publique des médicaments. Pas encore dans votre stock."]);
+  else if(!r.p&&r.medMiss)msgs.push(["warn","Code absent de la base publique française (produit importé d'un autre pays ?). Choisissez le produit, ou créez-le : Garab retiendra ce code."]);
+  else if(!r.p&&r.medNoBase)msgs.push(["warn","Base des médicaments indisponible (pas d'internet ?). Choisissez le produit, ou créez-le."]);
+  else if(!r.p&&r.kind!=="Autre code"&&!r.manual)msgs.push(["warn","Code inconnu dans votre stock. Choisissez le produit, ou créez-le : Garab retiendra ce code pour les prochaines fois."]);
   if(r.kind==="Autre code")msgs.push(["warn","Ce code n'est pas un code de médicament (GS1). Choisissez le produit à la main."]);
   el.className="panel "+(bad||r.dup?"scanbad":msgs.length?"scanwarn":"scanok");
-  const sel=`<select id="sp" aria-label="Produit"><option value="">— Choisir le produit —</option>${P.map(p=>`<option value="${p.id}" ${r.p===p?"selected":""}>${p.nom} · ${p.pres}</option>`).join("")}</select>`;
-  el.innerHTML=`<header><div><h2>${r.p?r.p.nom:r.manual?"Saisie manuelle":"Produit à identifier"}</h2><p>${r.p?r.p.pres+" · "+r.p.cat:r.kind}${r.fmt?" · lu : "+r.fmt.replace("_"," "):""}</p></div>
+  const sel=`<select id="sp" aria-label="Produit"><option value="">${m==="entree"?"— Nouveau produit —":"— Choisir le produit —"}</option>${P.map(p=>`<option value="${p.id}" ${r.p===p?"selected":""}>${p.nom} · ${p.pres}</option>`).join("")}</select>`;
+  el.innerHTML=`<header><div><h2>${r.p?r.p.nom:r.med?esc(r.med[0]):r.manual?"Saisie manuelle":"Produit à identifier"}</h2><p>${r.p?r.p.pres+" · "+r.p.cat:r.med?esc(r.med[2]||r.med[1]):r.kind}${r.fmt?" · lu : "+r.fmt.replace("_"," "):""}</p></div>
     ${r.p&&r.exp?(bad?'<span class="st bad">Périmé</span>':warn?`<span class="st warn">Dans ${d} j</span>`:'<span class="st ok">Date OK</span>'):""}</header>
   ${msgs.map(([c,t])=>`<p class="st ${c}" style="white-space:normal;border-radius:8px;padding:8px 10px;font-size:.85rem">${t}</p>`).join("")}
   <dl class="kv">${r.gtin?`<dt>Code produit</dt><dd class="num">${r.gtin}</dd>`:""}${r.serie?`<dt>N° de série</dt><dd class="num">${esc(r.serie)}</dd>`:""}
     ${r.p&&m!=="entree"?`<dt>En stock</dt><dd>${stock(r.p)} boîtes${lotEnStock?` · dont ${lotEnStock.q} de ce lot`:r.lot?" · ce lot n'est pas dans votre stock":""}</dd><dt>Prix</dt><dd>${fmt(r.p.pv)}</dd>`:""}</dl>
-  ${!r.p?`<div class="field"><label for="sp">Produit</label>${sel}</div>`:""}
+  ${!r.p?`<div class="field"><label for="sp">${m==="entree"?"Produit de votre stock":"Produit"}</label>${sel}</div>
+    ${m==="entree"?`<div class="row"><div class="field" style="flex:1 1 200px"><label for="snom">Nom du nouveau produit</label><input type="text" id="snom" value="${esc(r.med?r.med[0]:"")}" placeholder="ex. Paracétamol 1000 mg"></div>
+    <div class="field"><label for="spv">Prix de vente (F)</label><input type="number" id="spv" class="qin" min="0" inputmode="numeric" placeholder="0"></div></div>`:""}`:""}
   ${m!=="vente"?`<div class="row">
     <div class="field"><label for="slot">N° de lot</label><input type="text" id="slot" class="lotin" value="${esc(r.lot)}" style="width:140px"></div>
     <div class="field"><label for="sexp">Péremption</label><input type="date" id="sexp" value="${r.exp}"></div>
     ${m==="entree"?`<div class="field"><label for="sq2">Boîtes identiques</label><input type="number" id="sq2" class="qin" min="1" value="1"></div>`:""}</div>`:""}
-  <div class="row">${m==="entree"?`<button class="btn pri" data-act="scanadd" ${bad?"disabled":""}>Ajouter au stock</button>`:m==="vente"?`${r.done?'<span class="st ok">Ajouté au ticket ✓</span>':`<button class="btn pri" data-act="scansell" ${bad||r.dup?"disabled":""}>Ajouter au ticket</button>`}<button class="btn" data-go="caisse">Voir le ticket (${S.cart.reduce((a,c)=>a+c.q,0)})</button>`:`<button class="btn" data-act="scanmode" data-m="entree">Entrer en stock</button><button class="btn" data-act="scanmode" data-m="vente">Vendre</button>`}
+  <div class="row">${m==="entree"?`<button class="btn pri" data-act="scanadd" ${bad?"disabled":""}>Ajouter au stock</button>`:m==="vente"?`${r.done?'<span class="st ok">Ajouté au ticket ✓</span>':`<button class="btn pri" data-act="scansell" ${bad||r.dup||(!r.p&&r.med)?"disabled":""}>Ajouter au ticket</button>`}<button class="btn" data-go="caisse">Voir le ticket (${S.cart.reduce((a,c)=>a+c.q,0)})</button>`:`<button class="btn" data-act="scanmode" data-m="entree">Entrer en stock</button><button class="btn" data-act="scanmode" data-m="vente">Vendre</button>`}
     <button class="btn" data-act="scannext">Boîte suivante</button></div>
   <details><summary class="muted" style="cursor:pointer;font-size:.82rem">Contenu brut du code</summary><p class="raw">${esc(r.raw).replace(/\x1D/g,"<b>⟨GS⟩</b>")||"—"}</p></details>`}
 function V_scanList(){const el=document.getElementById("scanlist");if(!el)return;
@@ -685,6 +695,7 @@ const SAMPLES=[
   ["Diclofénac · lot périmé",()=>"01"+byId(4).gtin+"17261015"+"10DC118\x1D21"+"Z1Y8C3"],
   ["Paracétamol · code-barres simple",()=>byId(1).gtin.slice(1)],
   ["Boîte inconnue · DataMatrix",()=>"01"+(b=>b+gsChk(b))("0200999999999")+"172805001011B42\x1D21"+"NEW0001"],
+  ["Vraie boîte française (CIP)",()=>"010340093450778617270131104LW8A\x1D21D"+Math.random().toString(36).slice(2,8).toUpperCase()],
   ["Même Coartem scanné 2 fois",()=>"01"+byId(6).gtin+"17270930"+"10CT1188\x1D21"+"8K2F9QX41"]];
 V.scanner=()=>head("Scanner","Photographiez le DataMatrix (le petit carré à points) : produit, n° de lot et date de péremption se remplissent seuls. Fonctionne aussi avec les QR codes et les codes-barres.")+
   `<div class="seg" role="group" aria-label="Que faire de la boîte ?">${[["entree","Entrée en stock"],["vente","Vente"],["verif","Vérifier une boîte"]].map(([k,l])=>`<button data-smode="${k}" aria-pressed="${S.scanMode===k}">${l}</button>`).join("")}</div>
@@ -699,10 +710,12 @@ V.scanner=()=>head("Scanner","Photographiez le DataMatrix (le petit carré à po
     <section class="panel" id="scanres" aria-live="polite"></section>
   </div>
   <section class="panel"><header><div><h2>Boîtes scannées</h2><p>Pour une pharmacie qui démarre sur papier : on scanne chaque rayon, le stock se crée avec ses dates.</p></div></header><div class="list" id="scanlist"></div></section>
-  <p class="note-box">Le DataMatrix se lit sans internet et sans IA : c'est un format standard (GS1). Les boîtes sans code se saisissent à la main ; dans la version complète, une IA lira la mention « LOT… EXP… » imprimée sur la boîte, avec confirmation par le vendeur.</p>`;
-function scanAfter(){V_scanRes();V_scanList()}
-function onCode(raw,fmt){const r=lire(raw,fmt);S.cur=r;if(S.cam)S.cam.paused=true;
+  <p class="note-box">Le DataMatrix se lit sans internet et sans IA : c'est un format standard (GS1). Les noms des médicaments importés de France viennent de la base publique des médicaments (mise à jour chaque semaine). Les boîtes sans code se saisissent à la main ; dans la version complète, une IA lira la mention « LOT… EXP… » imprimée sur la boîte, avec confirmation par le vendeur.</p>`;
+function scanAfter(){V_scanRes();V_scanList();loadMed()}
+async function onCode(raw,fmt){const r=lire(raw,fmt);S.cur=r;if(S.cam)S.cam.paused=true;
   if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}
+  const cip=!r.p&&cipOf(r.gtin);
+  if(cip){r.medLoading=true;V_scanRes();const M=await loadMed();r.medLoading=false;if(S.cur!==r)return;r.med=M&&M[cip]||null;r.medMiss=!!M&&!r.med;r.medNoBase=!M}
   if(S.scanMode==="vente"&&r.p&&!(r.exp&&dj(r.exp)<0)&&!r.dup){if(addCart(r.p.id,true)){logScan(r,"Vendu","ok","ajouté au ticket");r.done=true;setTimeout(resumeCam,1500)}}
   V_scanRes();const rs=document.getElementById("scanres");if(rs&&window.innerWidth<980&&!(S.scanMode==="vente"&&r.done))rs.scrollIntoView({behavior:"smooth",block:"start"})}
 function logScan(r,st,c,txt){if(r.serie)S.serials.add(r.gtin+"|"+r.serie);S.scans.push({nom:(r.p||{}).nom||"Produit",st,c,txt:(r.lot?"lot "+r.lot:"")+(r.exp?" · exp. "+dfr(r.exp):"")+(txt?" · "+txt:"")});V_scanList()}
@@ -745,13 +758,20 @@ async function scanPhoto(file){const st=document.getElementById("camst");st.text
     if(!r.length){st.textContent="Aucun code lu sur cette photo. Rapprochez-vous (10–15 cm), avec une bonne lumière et le code bien net.";return}
     st.textContent="Code lu sur la photo.";onCode(r[0].rawValue,fmtName(r[0].format))}
   catch(e){st.textContent="Le lecteur n'a pas pu se charger (pas d'internet ?)."}}
-function scanAdd(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")||{}).value,p=pid&&byId(pid);if(!p){toast("Choisissez d'abord le produit.");return}
+function scanAdd(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")||{}).value;let p=pid&&byId(pid),created="";
+  const lot0=document.getElementById("slot").value.trim(),exp0=document.getElementById("sexp").value;
+  if(!p){const nom=((document.getElementById("snom")||{}).value||"").trim(),pv=parseInt((document.getElementById("spv")||{}).value)||0;
+    if(!nom){toast("Choisissez le produit, ou indiquez le nom du nouveau produit.");return}
+    if(!pv){toast("Indiquez le prix de vente.");document.getElementById("spv").focus();return}
+    if(!lot0||!exp0){toast("Indiquez le n° de lot et la date de péremption.");return}
+    if(!CATS.includes("Autres"))CATS.push("Autres");
+    p={id:Math.max(...P.map(x=>x.id))+1,nom,pres:r.med?r.med[2]:"",cat:"Autres",pv,pa:Math.round(pv/1.3),vj:.5,f:"lab",lots:[],gtin:r.gtin||"",gtins:[]};P.push(p);created=" Fiche produit créée."}
   const lot=document.getElementById("slot").value.trim(),exp=document.getElementById("sexp").value,q=Math.max(1,parseInt(document.getElementById("sq2").value)||1);
   if(!lot||!exp){toast("Indiquez le n° de lot et la date de péremption.");return}
   if(dj(exp)<0){toast("Lot périmé : il ne peut pas entrer en stock.");return}
   let learned="";if(!r.p&&r.gtin&&!findGtin(r.gtin)){p.gtins.push(r.gtin);learned=" Code retenu pour ce produit."}
   const l=p.lots.find(x=>x.n===lot&&x.exp===exp);l?l.q+=q:p.lots.push({n:lot,exp,q,prio:false});r.p=p;
-  logScan(r,"+"+q+" en stock","ok","");S.cur=null;nav();V_scanRes();resumeCam();toast(`${q} × ${p.nom} (lot ${lot}, exp. ${dfr(exp)}) ajouté au stock.${learned}`)}
+  logScan(r,"+"+q+" en stock","ok","");S.cur=null;nav();V_scanRes();resumeCam();toast(`${q} × ${p.nom} (lot ${lot}, exp. ${dfr(exp)}) ajouté au stock.${created||learned}`)}
 function scanSell(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")||{}).value,p=pid&&byId(pid);if(!p){toast("Choisissez d'abord le produit.");return}
   if(!r.p&&r.gtin&&!findGtin(r.gtin))p.gtins.push(r.gtin);r.p=p;
   if(addCart(p.id,true)){logScan(r,"Vendu","ok","ajouté au ticket");toast(`${p.nom} ajouté au ticket.`);S.cur=null;V_scanRes();resumeCam()}}
