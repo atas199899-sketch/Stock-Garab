@@ -156,7 +156,7 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
 .reader .aim.hit{border-color:#5BD18C}
 .reader .tip{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:.8rem;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
 .reader .ph{padding:20px;text-align:center;font-size:.9rem;opacity:.85}
-#scanres{scroll-margin-top:170px}
+#scanres,#ticket{scroll-margin-top:80px}
 .scanok{border:2px solid var(--ok)} .scanwarn{border:2px solid var(--warn)} .scanbad{border:2px solid var(--bad)}
 .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:.92rem}
 .kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:700;overflow-wrap:anywhere}
@@ -164,20 +164,85 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
 .muted{color:var(--muted)}
 .empty{color:var(--muted);font-size:.9rem;padding:8px 0}
 .lot{font-family:var(--mono);font-size:.82rem}
+.nav button .ico{display:inline-flex;align-items:center;gap:10px}
+.nav svg,.tabbar svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tabbar,.cartbar,.mrole{display:none}
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
+.plan.cur{border-color:var(--ink);box-shadow:0 0 0 3px color-mix(in srgb,var(--ink) 25%,transparent)}
+.plan.alt{border:1px solid var(--line)}
+.plan .tagp{align-self:flex-start;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 9px;border-radius:99px;background:var(--acc);color:#2A1D00}
+.plan .sub{color:var(--muted);font-size:.86rem}
+.plan .inst{background:var(--sunk);border-radius:8px;padding:8px 10px;font-size:.86rem}
+.plan .inst s{color:var(--muted)}
+.plan .grow{flex:1}
+.launch{background:var(--ink);color:var(--ink-fg);border-radius:var(--r);padding:12px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.launch b{font-family:var(--display);font-size:1.05rem}
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:st}
+.steps li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:start;counter-increment:st}
+.steps li::before{content:counter(st);width:28px;height:28px;border-radius:50%;background:var(--ok-soft);color:var(--ok);font-weight:700;display:grid;place-items:center}
+.steps small{display:block;color:var(--muted)}
+.recap{display:flex;flex-direction:column}
+.recap div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--sunk)}
+.recap div.t{border-bottom:0;font-weight:700;font-size:1.1rem}
+.sheet{background:var(--bg);width:100%;max-height:80vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:10px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px;align-self:flex-end}
+.sheet .grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 6px}
+.sheet button.it{all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 10px;border-radius:10px;font-size:1.02rem;font-weight:700}
+.sheet button.it:hover,.sheet button.it[aria-current="page"]{background:var(--sunk)}
+.sheet button.it .pill{margin-left:auto;font-size:.75rem;padding:1px 8px;border-radius:99px;background:var(--acc);color:#2A1D00}
+.sheet svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:980px){.plans{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:980px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2,.grid2.eq{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:760px){
+  body{font-size:16px}
   .app{grid-template-columns:minmax(0,1fr)}
-  .side{position:sticky;top:env(safe-area-inset-top,0px);height:auto;padding:10px 0 8px;gap:8px;z-index:20;overflow:visible}
-  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--ink)}
-  .brand{padding-left:max(16px,env(safe-area-inset-left,0px))}
-  .role{flex-direction:row;align-items:center;gap:8px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
-  .role select{flex:1}
-  .nav{flex-direction:row;overflow-x:auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));scrollbar-width:none}
-  .nav button{white-space:nowrap;padding:7px 11px}
-  .side .foot{display:none}
-  main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;justify-content:space-between;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));gap:10px;z-index:20;overflow:visible}
+  .brand{padding:0;gap:8px} .brand b{font-size:1.25rem} .brand small{display:none} .brand svg{width:26px;height:26px}
+  .role,.nav,.side .foot{display:none}
+  .mrole{display:block;background:color-mix(in srgb,var(--ink-fg) 16%,transparent);color:var(--ink-fg);border:1px solid color-mix(in srgb,var(--ink-fg) 30%,transparent);border-radius:99px;padding:6px 12px;font-size:.85rem;font-weight:700;max-width:58%}
+  .mrole option{color:#13201B;background:#fff}
+  main{padding-top:16px;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));gap:16px}
+  h1{font-size:1.45rem} .top p{font-size:.9rem}
+  .tabbar{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+  .tabbar button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;font-size:.7rem;font-weight:700;color:var(--muted);position:relative;min-height:44px;justify-content:center}
+  .tabbar button[aria-current="page"]{color:var(--ink)}
+  .tabbar button:focus-visible{outline:3px solid var(--acc)}
+  .tabbar svg{width:24px;height:24px}
+  .tabbar .scan{color:var(--ink-fg)}
+  .tabbar .scan span.b{width:54px;height:54px;margin-top:-26px;border-radius:50%;background:var(--ink);display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.25);border:4px solid var(--surface)}
+  .tabbar .scan svg{width:26px;height:26px}
+  .tabbar .scan small{color:var(--muted);font-size:.7rem}
+  .tabbar .scan[aria-current="page"] small{color:var(--ink)}
+  .tabbar .dot{position:absolute;top:2px;left:calc(50% + 6px);font-size:.66rem;min-width:18px;padding:0 5px;border-radius:99px;background:var(--acc);color:#2A1D00;text-align:center;line-height:18px}
+  .cartbar{display:flex;position:fixed;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:24;background:var(--fg);color:var(--bg);border-radius:14px;padding:10px 10px 10px 16px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+  .cartbar b{font-size:1.1rem}
+  .cartbar .btn{background:var(--ink);color:var(--ink-fg);border-color:var(--ink)}
+  .toast{bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+  .btn{min-height:44px;padding:10px 16px} .btn.sm{min-height:38px;padding:7px 12px}
+  .chip{padding:9px 13px}
+  .seg button{padding:10px 12px}
+  .qty button{width:38px;height:38px}
+  input[type=text],input[type=search],input[type=number],input[type=date],input[type=tel],select,textarea{font-size:16px;min-height:44px}
+  .qin{width:84px}
+  main .row>select,main .row>input[type=search]{flex:1 1 100%}
   .methods{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .kpi b{font-size:1.2rem}
+  .methods button{min-height:52px}
+  .kpi{padding:12px} .kpi b{font-size:1.15rem}
+  .drawer{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+  .modal{max-height:88vh}
+  /* tableaux en fiches */
+  table.cards thead{display:none}
+  table.cards,table.cards tbody,table.cards tfoot,table.cards tr,table.cards td{display:block;width:100%}
+  table.cards tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;padding:12px 0;border-bottom:1px solid var(--line)}
+  table.cards tr:last-child{border-bottom:0}
+  table.cards td{border:0;padding:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:1px;min-width:0}
+  table.cards td::before{content:attr(data-l);color:var(--muted);font-family:var(--body);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  table.cards td[data-l=""]{grid-column:1/-1;flex-direction:row;justify-content:flex-end;align-items:center}
+  table.cards td[data-l=""]::before{display:none}
+  table.cards td[data-l=""] .row{justify-content:flex-end}
+  table.cards td:first-child{grid-column:1/-1;display:block;font-size:1rem}
+  table.cards td:first-child::before{display:none}
+  table.cards tfoot td{font-weight:700}
+  tr.click:hover td{background:none}
 }
 @media (prefers-reduced-motion:no-preference){.bars div{transition:height .3s}.toast{animation:up .2s ease-out}@keyframes up{from{transform:translate(-50%,10px);opacity:0}}}
 </style>
@@ -189,6 +254,7 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
       <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="currentColor" opacity=".16"/><path d="M12 6h6v6h6v6h-6v6h-6v-6H6v-6h6z" fill="currentColor"/></svg>
       <div><b>Garab</b><small>Stock pharmacie</small></div>
     </div>
+    <select class="mrole" id="mrole" aria-label="Je suis"><option value="titulaire">Titulaire</option><option value="vendeur">Vendeur</option></select>
     <div class="role">
       <label for="role">Je suis</label>
       <select id="role">
@@ -197,9 +263,10 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
       </select>
     </div>
     <nav class="nav" id="nav" aria-label="Sections"></nav>
-    <div class="foot">Pharmacie Keur Garab (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 5 · scanner ZXing</div>
+    <div class="foot">Pharmacie Keur Garab (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 6</div>
   </aside>
   <main id="main"></main>
+  <nav class="tabbar" id="tabbar" aria-label="Navigation"></nav>
 </div>
 <div id="layer"></div>
 <script>
@@ -289,13 +356,35 @@ function sortie(p,q){for(const l of live(p)){const t=Math.min(l.q,q);l.q-=t;q-=t
 function navItems(){const per=perimes().length+sous(0,30).length,sg=sugList().length,rec=S.orders.filter(o=>o.st==="attente").length;
   const all=[["accueil","Tableau de bord"],["caisse","Caisse"],["scanner","Scanner"],["stock","Stock"],["peremption","Péremptions",per],["commandes","Commandes",sg+rec],["inventaire","Inventaire"],["abonnement","Abonnement"]];
   return S.role==="vendeur"?all.filter(i=>["caisse","scanner","stock","peremption"].includes(i[0])):all}
+const ICO={accueil:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  caisse:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h4M14 13h3M7 17h4M14 17h3"/>',
+  scanner:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 16h3"/>',
+  stock:'<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  peremption:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+  commandes:'<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  inventaire:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10l2 2 4-4M9 16h6"/>',
+  abonnement:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
+  plus:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
+const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
+const SHORT={accueil:"Accueil",caisse:"Caisse",scanner:"Scanner",stock:"Stock",peremption:"Péremptions",commandes:"Commandes",inventaire:"Inventaire",abonnement:"Abonnement"};
 function nav(){const items=navItems();if(!items.some(i=>i[0]===S.view))S.view=items[0][0];
-  document.getElementById("nav").innerHTML=items.map(([k,l,n])=>`<button data-go="${k}" ${S.view===k?'aria-current="page"':""}><span>${l}</span>${n?`<span class="pill">${n}</span>`:""}</button>`).join("")}
+  document.getElementById("nav").innerHTML=items.map(([k,l,n])=>`<button data-go="${k}" ${S.view===k?'aria-current="page"':""}><span class="ico">${svg(k)}${l}</span>${n?`<span class="pill">${n}</span>`:""}</button>`).join("");
+  const main=S.role==="vendeur"?["caisse","scanner","stock","peremption"]:["accueil","caisse","scanner","stock"],rest=items.filter(i=>!main.includes(i[0])),restN=rest.reduce((a,i)=>a+(i[2]||0),0),
+    tb=document.getElementById("tabbar"),btn=k=>{const it=items.find(i=>i[0]===k);return k==="scanner"?`<button class="scan" data-go="scanner" ${S.view===k?'aria-current="page"':""}><span class="b">${svg(k)}</span><small>Scanner</small></button>`:
+      `<button data-go="${k}" ${S.view===k?'aria-current="page"':""}>${svg(k)}<span>${SHORT[k]}</span>${it&&it[2]?`<span class="dot">${it[2]}</span>`:""}</button>`};
+  tb.style.setProperty("--n",main.length+(rest.length?1:0));
+  tb.innerHTML=main.map(btn).join("")+(rest.length?`<button data-act="more" ${rest.some(i=>i[0]===S.view)?'aria-current="page"':""}>${svg("plus")}<span>Plus</span>${restN?`<span class="dot">${restN}</span>`:""}</button>`:"");
+  document.getElementById("role").value=S.role;document.getElementById("mrole").value=S.role}
+function more(){const items=navItems(),main=["accueil","caisse","scanner","stock"];
+  layer(`<div class="sheet" role="dialog" aria-modal="true" aria-label="Plus"><div class="grab"></div>${items.filter(i=>!main.includes(i[0])).map(([k,l,n])=>`<button class="it" data-go="${k}" ${S.view===k?'aria-current="page"':""}>${svg(k)}${l}${n?`<span class="pill">${n}</span>`:""}</button>`).join("")}
+  <p class="muted" style="font-size:.8rem;padding:8px 10px">Pharmacie Keur Garab (exemple) · démo, rien n'est sauvegardé ni payé.</p></div>`)}
+function cards(root){(root||document).querySelectorAll(".tw table").forEach(t=>{t.classList.add("cards");const h=[...t.querySelectorAll("thead th")].map(x=>x.textContent.trim());
+  t.querySelectorAll("tbody tr,tfoot tr").forEach(tr=>{let i=0;[...tr.children].forEach(td=>{if(!td.hasAttribute("data-l"))td.setAttribute("data-l",td.colSpan>1?"":(h[i]||""));i+=td.colSpan||1})})})}
 function toast(t){document.querySelectorAll(".toast").forEach(x=>x.remove());const el=document.createElement("div");el.className="toast";el.setAttribute("role","status");el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),3400)}
 function closeLayer(){document.getElementById("layer").innerHTML=""}
-function layer(html,center){document.getElementById("layer").innerHTML=`<div class="overlay ${center?"center":""}" data-close="1">${html}</div>`;const f=document.querySelector("#layer .x");f&&f.focus()}
+function layer(html,center){document.getElementById("layer").innerHTML=`<div class="overlay ${center?"center":""}" data-close="1">${html}</div>`;cards(document.getElementById("layer"));const f=document.querySelector("#layer .x");f&&f.focus()}
 function render(keepScroll){stopCam();nav();const y=window.scrollY;document.getElementById("main").innerHTML=V[S.view]();
-  if(S.view==="stock")fillStock();if(S.view==="caisse")fillRes();if(S.view==="inventaire")invTotals();if(S.view==="scanner")scanAfter();window.scrollTo(0,keepScroll?y:0)}
+  if(S.view==="stock")fillStock();if(S.view==="caisse")fillRes();if(S.view==="inventaire")invTotals();if(S.view==="scanner")scanAfter();cards();window.scrollTo(0,keepScroll?y:0)}
 function go(v){S.view=v;S.q="";closeLayer();render()}
 const head=(t,s,right="")=>`<div class="top"><div><h1>${t}</h1><p>${s}</p></div><div class="row">${right}</div></div>`;
 const bubble=(t,h="07:30",cls="")=>`<div class="bubble ${cls}">${esc(t)}<span class="t">${h}</span></div>`;
@@ -361,12 +450,12 @@ V.caisse=()=>{const top=[1,24,6,9,2,18,16,26];
       <div class="chips" aria-label="Ventes fréquentes">${top.map(i=>`<button class="chip" data-add="${i}">${byId(i).nom}</button>`).join("")}</div>
       <div class="tw"><table><thead><tr><th>Produit</th><th class="r">Stock</th><th class="r">Prix</th><th></th></tr></thead><tbody id="res"></tbody></table></div>
     </section>
-    <section class="panel ticket" aria-label="Ticket en cours"><header><h2>Ticket</h2>${S.cart.length?'<button class="btn sm" data-act="vider">Vider</button>':""}</header>${ticket()}</section>
+    <section class="panel ticket" id="ticket" aria-label="Ticket en cours"><header><h2>Ticket</h2>${S.cart.length?'<button class="btn sm" data-act="vider">Vider</button>':""}</header>${ticket()}</section>
   </div>
   <section class="panel"><header><div><h2>Tickets du jour</h2><p>${S.sales.length} ventes · ${fmt(ventesJour())}</p></div></header>
     <div class="tw"><table><thead><tr><th>Heure</th><th>Produits</th><th>Paiement</th><th class="r">Montant</th></tr></thead><tbody>
     ${S.sales.slice().reverse().map(v=>`<tr><td class="num">${v.h}</td><td>${v.items.map(i=>i.q+" × "+byId(i.pid).nom).join(", ")}</td><td><span class="st n">${v.mode}</span></td><td class="r num">${fmt(v.tot)}</td></tr>`).join("")}
-    </tbody></table></div></section>`};
+    </tbody></table></div></section>`+(S.cart.length?`<div class="cartbar"><div><small>${S.cart.reduce((a,c)=>a+c.q,0)} article${S.cart.reduce((a,c)=>a+c.q,0)>1?"s":""}</small><br><b class="num">${fmt(S.cart.reduce((s,c)=>s+c.q*byId(c.pid).pv,0))}</b></div><button class="btn" data-act="toticket">Voir le ticket · encaisser</button></div>`:"")};
 function ticket(){if(!S.cart.length)return '<p class="empty">Ajoutez des produits depuis la recherche ou les ventes fréquentes.</p>';
   const tot=S.cart.reduce((s,c)=>s+c.q*byId(c.pid).pv,0),ass=S.pay==="Assurance";
   return S.cart.map(c=>{const p=byId(c.pid),l=live(p)[0];return `<div class="tl"><div><b>${p.nom}</b><small>${p.pres} · lot <span class="lot">${l?l.n:"—"}</span>${l?" · exp. "+dfr(l.exp):""}</small></div>
@@ -380,7 +469,7 @@ function fillRes(){const q=S.q.trim().toLowerCase(),el=document.getElementById("
   el.innerHTML=list.map(p=>{const s=stock(p),l=live(p)[0],d=dead(p).length,inCart=(S.cart.find(c=>c.pid===p.id)||{}).q||0;
     const tags=(l&&(l.prio||dj(l.exp)<90)?` <span class="st acc">À vendre en priorité</span>`:"")+(d?` <span class="st bad">${d} lot périmé bloqué</span>`:"");
     return `<tr><td><b>${p.nom}</b>${tags}<small>${p.pres}${l?` · lot ${l.n}, exp. ${dfr(l.exp)}`:""}</small></td><td class="r num">${s}</td><td class="r num">${fmt(p.pv)}</td>
-    <td class="r">${s>inCart?`<button class="btn sm" data-add="${p.id}">Ajouter</button>`:`<span class="st bad">${s?"Plus de stock":"Rupture"}</span>`}</td></tr>`}).join("")||`<tr><td colspan="4" class="empty">Aucun produit pour « ${esc(S.q)} ».</td></tr>`}
+    <td class="r">${s>inCart?`<button class="btn sm" data-add="${p.id}">Ajouter</button>`:`<span class="st bad">${s?"Plus de stock":"Rupture"}</span>`}</td></tr>`}).join("")||`<tr><td colspan="4" class="empty">Aucun produit pour « ${esc(S.q)} ».</td></tr>`;cards(el.closest(".tw").parentNode)}
 function addCart(pid,silent){const p=byId(pid),c=S.cart.find(x=>x.pid===p.id),q=c?c.q:0;if(q>=stock(p)){toast(stock(p)?`Plus que ${stock(p)} en stock.`:`${p.nom} : rupture de stock.`);return false}
   c?c.q++:S.cart.push({pid:p.id,q:1});if(silent){nav();return true}render(true)}
 function encaisser(){const tot=S.cart.reduce((s,c)=>s+c.q*byId(c.pid).pv,0),now=new Date(),h=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
@@ -400,7 +489,7 @@ function fillStock(){const q=S.q.trim().toLowerCase(),el=document.getElementById
   const list=P.filter(p=>(!q||(p.nom+" "+p.pres).toLowerCase().includes(q))&&(!S.fcat||p.cat===S.fcat)&&(!S.fst||(S.fst==="exp"?p.lots.some(l=>l.q&&dj(l.exp)<90):etat(p)[1]===S.fst)));
   el.innerHTML=list.map(p=>{const[e,c]=etat(p),n=p.lots.filter(l=>l.q).sort((a,b)=>a.exp<b.exp?-1:1)[0],d=n?dj(n.exp):null;
     return `<tr class="click" data-prod="${p.id}" tabindex="0"><td><b>${p.nom}</b><small>${p.pres}</small></td><td>${p.cat}</td><td class="r num">${stock(p)}</td><td class="r num">${stock(p)?jours(p):"—"}</td>
-    <td>${n?`<span class="num">${dfr(n.exp)}</span> ${d<0?'<span class="st bad">Périmé</span>':d<30?`<span class="st bad">${d} j</span>`:d<90?`<span class="st warn">${d} j</span>`:""}`:"—"}</td><td><span class="st ${c}">${e}</span></td></tr>`}).join("")||'<tr><td colspan="6" class="empty">Aucun produit.</td></tr>'}
+    <td>${n?`<span class="num">${dfr(n.exp)}</span> ${d<0?'<span class="st bad">Périmé</span>':d<30?`<span class="st bad">${d} j</span>`:d<90?`<span class="st warn">${d} j</span>`:""}`:"—"}</td><td><span class="st ${c}">${e}</span></td></tr>`}).join("")||'<tr><td colspan="6" class="empty">Aucun produit.</td></tr>';cards(el.closest(".tw").parentNode)}
 function fiche(id){const p=byId(id),[e,c]=etat(p),inv=invendus(p),sg=sugg(p);
   layer(`<div class="drawer" role="dialog" aria-modal="true" aria-label="${p.nom}"><div class="top"><div><h2>${p.nom}</h2><p>${p.pres} · ${p.cat}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
   <div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))">
@@ -491,27 +580,53 @@ function valInv(){const items=P.filter(p=>p.cat===S.invCat&&S.inv[p.id]!=null&&S
     if(d<0){for(const l of p.lots.slice().sort((a,b)=>a.exp<b.exp?-1:1)){const r=Math.min(l.q,-d);l.q-=r;d+=r;if(!d)break}}else if(d>0){const l=p.lots.slice().sort((a,b)=>a.exp<b.exp?1:-1)[0];if(l)l.q+=d;else p.lots.push({n:"INV-"+p.id,exp:"2027-12-31",q:d,prio:false})}
     delete S.inv[p.id]});render();toast(`Inventaire « ${S.invCat} » validé : ${items.length} produits, ${ec} unités d'écart corrigées.`)}
 
-V.abonnement=()=>head("Abonnement","Un prix fixe par pharmacie, payé chaque mois par Mobile Money. Sans engagement.")+
-  `<div class="grid2 eq">
-  <section class="plan"><span class="lbl">Garab Officine</span><div><span class="price">15 000 F</span> <span class="muted">/ mois</span></div>
-    <ul><li>Alertes de péremption par lot, 90 jours avant</li><li>Caisse avec sortie FEFO et tiers payant</li><li>Suggestions de commande par grossiste</li><li>Inventaire tournant sur téléphone</li><li>Résumé WhatsApp chaque matin</li><li>Postes et vendeurs illimités · assistance en français et en wolof</li></ul>
-    <p class="muted">Payé jusqu'au <b>${S.paidUntil}</b></p>
-    <button class="btn pri" data-act="payer">Payer le mois suivant</button></section>
+const PLANS=[
+  {k:"petite",n:"Petite officine",m:15000,inst:50000,sub:"Jusqu'à 1 500 références · 1 poste de caisse",feat:["Toutes les fonctions de base","Assistance WhatsApp en français et en wolof"]},
+  {k:"officine",n:"Officine",m:25000,inst:75000,sub:"Jusqu'à 4 000 références · 3 postes",pop:true,feat:["Toutes les fonctions de base","Tiers payant IPM, mutuelles et CMU, avec relevés","Vendeurs illimités, droits par rôle"]},
+  {k:"grande",n:"Grande pharmacie",m:35000,inst:100000,from:true,sub:"Références et postes illimités · plusieurs sites",feat:["Tout ce qui est dans Officine","Plusieurs pharmacies, tableau de bord commun","Assistance prioritaire et visite trimestrielle"]}];
+S.plan="petite";S.bill="mois";
+const plan=k=>PLANS.find(x=>x.k===(k||S.plan));
+V.abonnement=()=>{const cur=plan(),an=S.bill==="an";
+  return head("Abonnement","Prix TTC, payés par Wave, Orange Money ou Free Money. Sans engagement en mensuel.")+
+  `<div class="launch"><div><b>Offre de lancement</b><br><span>Installation offerte pour les 20 premières pharmacies.</span></div><span class="st acc">Encore 14 places</span></div>
+  <section class="panel"><header><div><h2>Votre abonnement</h2><p>Formule ${cur.n} · ${an?"paiement annuel":"paiement mensuel"}</p></div><span class="st ok">Actif</span></header>
+    <div class="list"><div class="li"><span>Payé jusqu'au</span><b class="num">${S.paidUntil}</b></div>
+    <div class="li"><span>Prochain paiement</span><b class="num">${fmt(an?cur.m*10:cur.m)}${an?" / an":" / mois"}</b></div></div>
+    <button class="btn pri" data-act="payer">${an?"Payer l'année suivante":"Payer le mois suivant"}</button></section>
+  <div class="top"><div><h2>Les formules</h2><p>Incluses partout : alertes de péremption, caisse FEFO, scanner DataMatrix, commandes, inventaire, résumé WhatsApp.</p></div>
+    <div class="seg" role="group" aria-label="Facturation"><button data-bill="mois" aria-pressed="${!an}">Mensuel</button><button data-bill="an" aria-pressed="${an}">Annuel · 2 mois offerts</button></div></div>
+  <div class="plans">${PLANS.map(x=>{const isCur=x.k===S.plan;return `<section class="plan ${isCur?"cur":"alt"}">
+    ${x.pop?'<span class="tagp">La plus choisie</span>':""}<span class="lbl">${x.n}</span>
+    <div><span class="price">${nb(an?x.m*10:x.m)} F</span> <span class="muted">/ ${an?"an":"mois"}</span></div>
+    ${an?`<span class="sub">Soit ${fmt(x.m*10/12)} par mois au lieu de ${fmt(x.m)}</span>`:""}<span class="sub">${x.sub}</span>
+    <ul class="grow">${x.feat.map(f=>`<li>${f}</li>`).join("")}</ul>
+    <div class="inst">Installation : ${an?`<b style="color:var(--ok)">offerte</b> <s>${x.from?"dès ":""}${fmt(x.inst)}</s>`:`<b>${x.from?"dès ":""}${fmt(x.inst)}</b> · payable en 3 fois`}</div>
+    ${isCur?'<span class="st ok" style="align-self:flex-start">Votre formule</span>':`<button class="btn ${x.pop?"pri":""}" data-plan="${x.k}">Passer à ${x.n}</button>`}</section>`}).join("")}</div>
+  <div class="grid2 eq">
+  <section class="panel"><header><div><h2>Ce que comprend l'installation</h2><p>Payée une seule fois, au démarrage.</p></div></header>
+    <ol class="steps">
+      <li><div><b>L'inventaire complet de départ</b><small>On scanne toutes vos boîtes, rayon par rayon, avec lot et date. Les périmés sont repérés dès le premier jour.</small></div></li>
+      <li><div><b>Le paramétrage</b><small>Prix de vente, grossistes, seuils de commande, comptes des vendeurs.</small></div></li>
+      <li><div><b>La formation sur place</b><small>Caisse, réception des livraisons, alertes : toute l'équipe est formée.</small></div></li>
+      <li><div><b>Une visite de suivi la semaine suivante</b><small>Pour corriger, répondre aux questions et rassurer.</small></div></li>
+    </ol>
+    <p class="note-box">Hors Dakar, les frais de déplacement s'ajoutent. Si vous avez déjà un fichier Excel ou un ancien logiciel, on importe vos données sans frais supplémentaires.</p></section>
   <section class="panel"><header><h2>Pourquoi ça se rembourse</h2></header>
     <div class="list"><div class="li"><span>Produits jetés en octobre</span><b class="num" style="color:var(--bad)">${fmt(S.perteOct)}</b></div>
-    <div class="li"><span>Abonnement Garab</span><b class="num">15 000 F</b></div>
-    <div class="li"><span>Si Garab évite 1 lot jeté sur 4</span><b class="num" style="color:var(--ok)">+ ${fmt(S.perteOct/4-15000)} / mois</b></div></div>
-    <p class="note-box">Sans compter les ventes perdues par rupture et les heures d'inventaire à la main.</p></section></div>
+    <div class="li"><span>Abonnement ${cur.n}</span><b class="num">${fmt(cur.m)} / mois</b></div>
+    <div class="li"><span>Si Garab évite 1 lot jeté sur 4</span><b class="num" style="color:${S.perteOct/4-cur.m>0?"var(--ok)":"var(--warn)"}">${S.perteOct/4-cur.m>0?"+ ":""}${fmt(S.perteOct/4-cur.m)} / mois</b></div></div>
+    <p class="note-box">Sans compter les ventes perdues par rupture, et les jours d'inventaire à la main. L'inventaire de départ rembourse souvent une partie de l'installation : les lots presque périmés qu'il trouve peuvent encore être rendus au grossiste.</p></section></div>
   <section class="panel"><header><h2>Factures</h2></header><div class="tw"><table><thead><tr><th>Période</th><th>Payé par</th><th>Le</th><th class="r">Montant</th></tr></thead><tbody>
-  ${S.invoices.map(i=>`<tr><td>${i[0]}</td><td>${i[1]}</td><td class="num">${i[2]}</td><td class="r num">15 000 F</td></tr>`).join("")}</tbody></table></div></section>`;
-function payer(m){S.payM=m||S.payM||"Wave";
-  layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Paiement"><div class="top"><div><h2>Payer décembre 2026</h2><p>15 000 F · Garab Officine</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  ${S.invoices.map(i=>`<tr><td>${i[0]}</td><td>${i[1]}</td><td class="num">${i[2]}</td><td class="r num">${fmt(i[3]||15000)}</td></tr>`).join("")}</tbody></table></div></section>`};
+function payer(m,k){S.payM=m||S.payM||"Wave";if(k!==undefined)S.payPlan=k;const ch=S.payPlan?plan(S.payPlan):null,cur=plan(),an=S.bill==="an",x=ch||cur,amt=an?x.m*10:x.m;
+  layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Paiement"><div class="top"><div><h2>${ch?"Passer à "+ch.n:an?"Payer l'année suivante":"Payer décembre 2026"}</h2><p>Garab ${x.n} · ${an?"paiement annuel":"paiement mensuel"}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
   <div class="demo-band">Démo : aucun paiement n'est effectué.</div>
+  <div class="recap"><div><span>Abonnement ${an?"décembre 2026 – novembre 2027":"décembre 2026"}</span><b class="num">${fmt(amt)}</b></div>
+    ${ch?`<div><span>Installation</span><span class="muted">déjà faite · 0 F</span></div>`:""}<div class="t"><span>À payer</span><span class="num">${fmt(amt)}</span></div></div>
   <div class="methods" role="group" aria-label="Moyen de paiement">${["Wave","Orange Money","Free Money"].map(x=>`<button data-pm="${x}" aria-pressed="${S.payM===x}">${x}</button>`).join("")}</div>
   <div class="field"><label for="tel">Numéro ${S.payM}</label><input type="tel" id="tel" value="77 000 00 00" inputmode="tel"></div>
   <p class="muted">Vous recevez une demande de validation sur votre téléphone. Le reçu arrive par WhatsApp.</p>
-  <div class="row"><button class="btn pri" data-act="paye">Payer 15 000 F</button><button class="btn" data-close="1">Annuler</button></div></div>`,true)}
-
+  <div class="row"><button class="btn pri" data-act="paye">Payer ${fmt(amt)}</button><button class="btn" data-close="1">Annuler</button></div></div>`,true)}
 
 /* ---------- Scanner : DataMatrix GS1, QR code, code-barres ---------- */
 const LIB="https://cdn.jsdelivr.net/npm/barcode-detector@3.2.2/dist/iife/ponyfill.js",WASM="https://cdn.jsdelivr.net/npm/zxing-wasm@3.1.3/dist/reader/";
@@ -575,7 +690,7 @@ const SAMPLES=[
 V.scanner=()=>head("Scanner","Photographiez le DataMatrix (le petit carré à points) : produit, n° de lot et date de péremption se remplissent seuls. Fonctionne aussi avec les QR codes et les codes-barres.")+
   `<div class="seg" role="group" aria-label="Que faire de la boîte ?">${[["entree","Entrée en stock"],["vente","Vente"],["verif","Vérifier une boîte"]].map(([k,l])=>`<button data-smode="${k}" aria-pressed="${S.scanMode===k}">${l}</button>`).join("")}</div>
   <div class="grid2 eq">
-    <section class="panel"><header><div><h2>Caméra <span class="st n" style="vertical-align:3px">v5</span></h2><p id="camst">Visez le code, il est lu tout seul.</p></div></header>
+    <section class="panel"><header><div><h2>Caméra</h2><p id="camst">Visez le code, il est lu tout seul.</p></div></header>
       <div class="reader" id="reader"><div class="ph">La caméra s'ouvre ici.<br>Sur ordinateur, utilisez les boîtes d'exemple.</div></div>
       <div class="row"><button class="btn pri" data-act="camon" id="camon">Ouvrir la caméra</button><button class="btn" data-act="camoff" id="camoff" hidden>Arrêter</button>
         <label class="btn" id="photobtn" style="cursor:pointer">Prendre une photo du code<input type="file" id="scanfile" accept="image/*" capture="environment" hidden></label>
@@ -658,6 +773,8 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(d.recv){recevoir(d.recv);return}
   if(d.recok){valRecep(d.recok);return}
   if(d.pm){payer(d.pm);return}
+  if(d.plan){payer(null,d.plan);return}
+  if(d.bill){S.bill=d.bill;render(true);return}
   if(d.retire){const{p,l}=findLot(d.retire);S.pertes.push({p,n:l.n,q:l.q,v:l.q*p.pa});toast(`Lot ${l.n} retiré : ${l.q} × ${p.nom} mis en destruction (${fmt(l.q*p.pa)}).`);l.q=0;render(true);return}
   if(d.retour){const{p,l}=findLot(d.retour);S.avoirs.push({p,n:l.n,q:l.q,v:l.q*p.pa});toast(`Retour préparé : ${l.q} × ${p.nom} chez ${FOUR[p.f].n}. Avoir attendu : ${fmt(l.q*p.pa)}.`);l.q=0;render(true);return}
   if(d.prio){const{p,l}=findLot(d.prio);l.prio=!l.prio;render(true);toast(l.prio?`${p.nom} (lot ${l.n}) sera proposé en premier au comptoir.`:"Priorité retirée.");return}
@@ -677,8 +794,11 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(a==="feuille")return toast(`Feuille de comptage « ${S.invCat} » prête (démo).`);
   if(a==="toutok"){P.filter(p=>p.cat===S.invCat).forEach(p=>S.inv[p.id]=p.lots.reduce((s,l)=>s+l.q,0));render(true);return}
   if(a==="valinv")return valInv();
-  if(a==="payer")return payer();
-  if(a==="paye"){S.paidUntil="31/12/2026";S.invoices.unshift(["Décembre 2026",S.payM,"01/11/2026"]);closeLayer();render();toast(`Paiement de 15 000 F par ${S.payM} confirmé (démo). Reçu envoyé sur WhatsApp.`)}
+  if(a==="payer")return payer(null,null);
+  if(a==="paye"){const x=plan(S.payPlan),an=S.bill==="an",amt=an?x.m*10:x.m;if(S.payPlan)S.plan=S.payPlan;S.payPlan=null;S.paidUntil=an?"30/11/2027":"31/12/2026";
+    S.invoices.unshift([an?"Déc. 2026 – nov. 2027":"Décembre 2026",S.payM,"02/11/2026",amt]);closeLayer();render();toast(`Paiement de ${fmt(amt)} par ${S.payM} confirmé (démo). Formule ${x.n}. Reçu envoyé sur WhatsApp.`);return}
+  if(a==="more")return more();
+  if(a==="toticket"){document.getElementById("ticket").scrollIntoView({behavior:"smooth",block:"start"});return}
 });
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLayer();if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.prod)fiche(e.target.dataset.prod);
   if(e.key==="Enter"&&e.target.id==="cq"){const q=S.q.trim().toLowerCase(),p=P.find(p=>(p.nom+" "+p.pres).toLowerCase().includes(q)&&stock(p));if(q&&p){addCart(p.id);S.q="";render(true);document.getElementById("cq").focus()}}});
@@ -689,7 +809,7 @@ document.addEventListener("input",e=>{const t=e.target;
   if(t.dataset.inv){S.inv[t.dataset.inv]=t.value===""?null:Math.max(0,parseInt(t.value)||0);invTotals();return}
   if(t.id&&t.id.startsWith("re")){const o=S.orders.find(x=>x.id===(document.querySelector("[data-recok]")||{}).dataset?.recok);o&&rwarn(o)}});
 document.addEventListener("change",e=>{const t=e.target;
-  if(t.id==="role"){S.role=t.value;S.view=navItems()[0][0];render();toast(t.value==="vendeur"?"Vue vendeur : caisse, stock et péremptions. Pas d'accès aux prix d'achat ni aux commandes.":"Vue titulaire : accès complet.");return}
+  if(t.id==="role"||t.id==="mrole"){S.role=t.value;S.view=navItems()[0][0];render();toast(t.value==="vendeur"?"Vue vendeur : caisse, stock et péremptions. Pas d'accès aux prix d'achat ni aux commandes.":"Vue titulaire : accès complet.");return}
   if(t.dataset.cq){render(true);return}
   if(t.id==="scat"){S.fcat=t.value;fillStock();return}
   if(t.id==="sst"){S.fst=t.value;fillStock();return}
