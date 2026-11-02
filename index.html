@@ -167,7 +167,7 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
 .nav button .ico{display:inline-flex;align-items:center;gap:10px}
 .nav svg,.tabbar svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .tabbar,.cartbar,.mrole{display:none}
-.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
+.plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
 .plan.cur{border-color:var(--ink);box-shadow:0 0 0 3px color-mix(in srgb,var(--ink) 25%,transparent)}
 .plan.alt{border:1px solid var(--line)}
 .plan .tagp{align-self:flex-start;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 9px;border-radius:99px;background:var(--acc);color:#2A1D00}
@@ -581,9 +581,8 @@ function valInv(){const items=P.filter(p=>p.cat===S.invCat&&S.inv[p.id]!=null&&S
     delete S.inv[p.id]});render();toast(`Inventaire « ${S.invCat} » validé : ${items.length} produits, ${ec} unités d'écart corrigées.`)}
 
 const PLANS=[
-  {k:"petite",n:"Petite officine",m:15000,inst:50000,sub:"Jusqu'à 1 500 références · 1 poste de caisse",feat:["Toutes les fonctions de base","Assistance WhatsApp en français et en wolof"]},
-  {k:"officine",n:"Officine",m:25000,inst:75000,sub:"Jusqu'à 4 000 références · 3 postes",pop:true,feat:["Toutes les fonctions de base","Tiers payant IPM, mutuelles et CMU, avec relevés","Vendeurs illimités, droits par rôle"]},
-  {k:"grande",n:"Grande pharmacie",m:35000,inst:100000,from:true,sub:"Références et postes illimités · plusieurs sites",feat:["Tout ce qui est dans Officine","Plusieurs pharmacies, tableau de bord commun","Assistance prioritaire et visite trimestrielle"]}];
+  {k:"petite",n:"Petite officine",m:15000,inst:35000,sub:"Jusqu'à 1 500 références · 1 poste de caisse",feat:["Toutes les fonctions de base","Assistance WhatsApp en français et en wolof"]},
+  {k:"officine",n:"Officine",m:25000,inst:50000,sub:"Références illimitées · plusieurs postes de caisse",pop:true,feat:["Toutes les fonctions de base","Tiers payant IPM, mutuelles et CMU, avec relevés","Vendeurs illimités, droits par rôle"]}];
 S.plan="petite";S.bill="mois";
 const plan=k=>PLANS.find(x=>x.k===(k||S.plan));
 V.abonnement=()=>{const cur=plan(),an=S.bill==="an";
