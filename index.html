@@ -108,6 +108,7 @@ tfoot td{font-weight:700;border-top:2px solid var(--line)}
 .li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sunk)}
 .li:last-child{border-bottom:0}
 .li small{display:block;color:var(--muted);font-size:.8rem}
+.li b.num,.set b.num{white-space:nowrap}
 .li .ic{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:.85rem}
 .ic.bad{background:var(--bad-soft);color:var(--bad)} .ic.warn{background:var(--warn-soft);color:var(--warn)} .ic.ok{background:var(--ok-soft);color:var(--ok)}
 .li .grow{flex:1;min-width:0}
@@ -348,8 +349,8 @@ const P=RAW.split("\n").map(r=>{const[id,nom,pres,cat,pv,pa,vj,f,lots]=r.split("
 const byId=id=>P.find(p=>p.id===+id);
 
 let seed=7;const rng=()=>(seed=(seed*16807)%2147483647)/2147483647;
-const PERMS=[["dash","Voir le tableau de bord et les chiffres du jour","Tableau de bord"],["achat","Voir les prix d'achat et les marges","Prix d'achat"],["remise","Accorder des remises en caisse","Remises"],["per","Retirer des lots périmés et préparer les retours","Retraits et retours"],["recep","Réceptionner les livraisons","Réceptions"],["cmd","Passer les commandes aux grossistes","Commandes"],["inv","Faire les inventaires","Inventaires"],["prod","Créer et modifier les produits et les prix","Produits et prix"]];
-const ROLES={adjoint:{n:"Pharmacien adjoint",perm:["dash","achat","remise","per","recep","cmd","inv","prod"]},vendeur:{n:"Vendeur",perm:["per","recep"]},stagiaire:{n:"Stagiaire",perm:[]}};
+const PERMS=[["dash","Voir le tableau de bord et les chiffres du jour","Tableau de bord"],["achat","Voir les prix d'achat et les marges","Prix d'achat"],["remise","Accorder des remises en caisse","Remises"],["per","Retirer des lots périmés et préparer les retours","Retraits et retours"],["recep","Réceptionner les livraisons","Réceptions"],["cmd","Passer les commandes aux grossistes","Commandes"],["inv","Faire les inventaires","Inventaires"],["prod","Créer et modifier les produits et les prix","Produits et prix"],["fin","Voir les finances et clôturer la caisse","Finances"]];
+const ROLES={adjoint:{n:"Pharmacien adjoint",perm:["dash","achat","remise","per","recep","cmd","inv","prod","fin"]},vendeur:{n:"Vendeur",perm:["per","recep"]},stagiaire:{n:"Stagiaire",perm:[]}};
 const permOf=r=>Object.fromEntries(PERMS.map(([k])=>[k,(ROLES[r]||{perm:[]}).perm.includes(k)]));
 const S={role:"titulaire",uid:1,users:[{id:1,nom:"Dr Aïssatou Ndiaye",role:"titulaire",tel:"77 000 00 00",pin:"0000",actif:true},
     {id:2,nom:"Fatou Sarr",role:"adjoint",tel:"78 000 00 01",pin:"2468",actif:true,perm:permOf("adjoint")},
@@ -395,14 +396,14 @@ const sugList=()=>P.filter(p=>sugg(p)>0);
 /* ventes déjà faites ce matin */
 [[8,12,[[1,2],[24,4]],"Espèces"],[8,40,[[6,1],[1,1]],"Wave"],[9,5,[[16,2],[18,1]],"Assurance"],[9,31,[[9,1],[22,1]],"Orange Money"],[9,58,[[26,1],[25,1],[24,3]],"Espèces"],[10,20,[[2,2]],"Wave"]].forEach(([h,m,it,mode])=>{
   const items=it.map(([pid,q])=>{const p=byId(pid);sortie(p,q);return{pid,q,pv:p.pv}});const tot=items.reduce((s,i)=>s+i.q*i.pv,0);
-  S.sales.push({h:String(h).padStart(2,"0")+":"+String(m).padStart(2,"0"),items,tot,mode})});
+  S.sales.push({h:String(h).padStart(2,"0")+":"+String(m).padStart(2,"0"),items,tot,mode,par:"Moussa Diop",tp:mode==="Assurance"?80:0,org:mode==="Assurance"?"IPM Transports":""})});
 function sortie(p,q){for(const l of live(p)){const t=Math.min(l.q,q);l.q-=t;q-=t;if(!q)break}}
 
 /* ---------- Navigation ---------- */
 function navItems(){const per=perimes().length+sous(0,30).length,sg=sugList().length,rec=S.orders.filter(o=>o.st==="attente").length;
-  const all=[["accueil","Tableau de bord"],["caisse","Caisse"],["scanner","Scanner"],["stock","Stock"],["peremption","Péremptions",per],["commandes","Commandes",sg+rec],["inventaire","Inventaire"],["abonnement","Abonnement"]];
+  const all=[["accueil","Tableau de bord"],["caisse","Caisse"],["scanner","Scanner"],["stock","Stock"],["peremption","Péremptions",per],["commandes","Commandes",sg+rec],["inventaire","Inventaire"],["finances","Finances"],["abonnement","Abonnement"]];
   all.splice(7,0,["parametres","Paramètres"]);
-  const ok={accueil:can("dash"),commandes:can("cmd")||can("recep"),inventaire:can("inv"),parametres:isTit(),abonnement:isTit()};
+  const ok={accueil:can("dash"),finances:can("fin"),commandes:can("cmd")||can("recep"),inventaire:can("inv"),parametres:isTit(),abonnement:isTit()};
   return all.filter(i=>ok[i[0]]!==false)}
 const ICO={accueil:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
   caisse:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h4M14 13h3M7 17h4M14 17h3"/>',
@@ -410,12 +411,13 @@ const ICO={accueil:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="
   stock:'<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
   peremption:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
   commandes:'<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  finances:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   inventaire:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10l2 2 4-4M9 16h6"/>',
   parametres:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   abonnement:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
   plus:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
-const SHORT={accueil:"Accueil",caisse:"Caisse",scanner:"Scanner",stock:"Stock",peremption:"Péremptions",commandes:"Commandes",inventaire:"Inventaire",parametres:"Paramètres",abonnement:"Abonnement"};
+const SHORT={accueil:"Accueil",caisse:"Caisse",scanner:"Scanner",stock:"Stock",peremption:"Péremptions",commandes:"Commandes",inventaire:"Inventaire",finances:"Finances",parametres:"Paramètres",abonnement:"Abonnement"};
 function nav(){const items=navItems();if(!items.some(i=>i[0]===S.view))S.view=items[0][0];
   document.getElementById("nav").innerHTML=items.map(([k,l,n])=>`<button data-go="${k}" ${S.view===k?'aria-current="page"':""}><span class="ico">${svg(k)}${l}</span>${n?`<span class="pill">${n}</span>`:""}</button>`).join("");
   const main=can("dash")?["accueil","caisse","scanner","stock"]:["caisse","scanner","stock","peremption"],rest=items.filter(i=>!main.includes(i[0])),restN=rest.reduce((a,i)=>a+(i[2]||0),0),
@@ -426,7 +428,7 @@ function nav(){const items=navItems();if(!items.some(i=>i[0]===S.view))S.view=it
   const u=me(),ini=initials(u);
   document.getElementById("role").innerHTML=`<span class="av">${ini}</span><span class="nm"><b>${esc(u.nom)}</b><small>${roleName(u)} · changer</small></span><span class="chev">▾</span>`;
   document.getElementById("mrole").innerHTML=`<span class="av">${ini}</span><span>${esc(short(u))}</span>`;
-  document.querySelector(".side .foot").innerHTML=`${esc(S.cfg.nom)} (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 8`}
+  document.querySelector(".side .foot").innerHTML=`${esc(S.cfg.nom)} (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 9`}
 function more(){const items=navItems(),main=can("dash")?["accueil","caisse","scanner","stock"]:["caisse","scanner","stock","peremption"];
   layer(`<div class="sheet" role="dialog" aria-modal="true" aria-label="Plus"><div class="grab"></div>${items.filter(i=>!main.includes(i[0])).map(([k,l,n])=>`<button class="it" data-go="${k}" ${S.view===k?'aria-current="page"':""}>${svg(k)}${l}${n?`<span class="pill">${n}</span>`:""}</button>`).join("")}
   <p class="muted" style="font-size:.8rem;padding:8px 10px">${esc(S.cfg.nom)} (exemple) · connecté : ${esc(me().nom)} (${roleName(me())}) · démo, rien n'est sauvegardé ni payé.</p></div>`)}
@@ -518,7 +520,7 @@ function ticket(){if(!S.cart.length)return '<p class="empty">Ajoutez des produit
     <div class="qty"><button data-q="${c.pid}|-1" aria-label="Moins">−</button><span class="num">${c.q}</span><button data-q="${c.pid}|1" aria-label="Plus">+</button></div><b class="num">${fmt(c.q*p.pv)}</b></div>`}).join("")+
   (can("remise")?`<div class="row"><span class="lbl">Remise</span><div class="seg" role="group" aria-label="Remise">${[0,5,10].map(r=>`<button data-rem="${r}" aria-pressed="${S.remise===r}">${r} %</button>`).join("")}</div>${S.remise?`<span class="muted">− ${fmt(brut()-tot)}</span>`:""}</div>`:"")+
   `<div class="total"><span>Total</span><b class="num">${fmt(tot)}</b></div>
-   ${ass?`<div class="note-box">Tiers payant (IPM / mutuelle / CMU) : part assurance ${S.cfg.tp} % = <b class="num">${fmt(tot*tp)}</b>. Le patient paie <b class="num">${fmt(tot*(1-tp))}</b>.</div>`:""}
+   ${ass?`<div class="field"><label for="org">Organisme</label><select id="org">${FIN.orgs.map(o=>`<option ${S.org===o?"selected":""}>${o}</option>`).join("")}</select></div><div class="note-box">Tiers payant : part ${esc(S.org)} ${S.cfg.tp} % = <b class="num">${fmt(tot*tp)}</b>. Le patient paie <b class="num">${fmt(tot*(1-tp))}</b>.</div>`:""}
    <div class="methods" role="group" aria-label="Moyen de paiement">${payModes().map(m=>`<button data-pay="${m}" aria-pressed="${S.pay===m}">${m}</button>`).join("")}</div>
    <button class="btn pri" data-act="encaisser" style="padding:12px">Encaisser ${fmt(ass?tot*(1-tp):tot)}</button>
    <p class="muted" style="font-size:.8rem;text-align:center">Vendeur : ${esc(me().nom)} · ticket « ${esc(S.cfg.ticket)} »</p>`}
@@ -532,7 +534,7 @@ function addCart(pid,silent){const p=byId(pid),c=S.cart.find(x=>x.pid===p.id),q=
   c?c.q++:S.cart.push({pid:p.id,q:1});if(silent){nav();return true}render(true)}
 function encaisser(){const tot=net(),now=new Date(),h=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
   const low=[];S.cart.forEach(c=>{const p=byId(c.pid);sortie(p,c.q);if(etat(p)[1]!=="ok")low.push(p.nom)});
-  S.sales.push({h,items:S.cart.map(c=>({pid:c.pid,q:c.q,pv:byId(c.pid).pv})),tot,mode:S.pay,par:me().nom.split(" ").slice(-2).join(" "),rem:S.remise});S.cart=[];S.remise=0;S.q="";render();
+  S.sales.push({h,items:S.cart.map(c=>({pid:c.pid,q:c.q,pv:byId(c.pid).pv})),tot,mode:S.pay,par:me().nom,rem:S.remise,tp:S.pay==="Assurance"?S.cfg.tp:0,org:S.pay==="Assurance"?S.org:""});S.cart=[];S.remise=0;S.q="";render();
   toast(`Vente enregistrée : ${fmt(tot)} (${S.sales[S.sales.length-1].mode}).`+(low.length?` Stock bas : ${low.join(", ")}. Ajouté aux commandes.`:""))}
 
 V.stock=()=>head("Stock",`${P.length} références dans la démo (une vraie officine en a 2 000 à 4 000). Cliquez sur un produit pour voir ses lots.`,
@@ -619,7 +621,9 @@ function rwarn(o){const el=document.getElementById("rwarn");if(!el)return;const 
   el.innerHTML=c.length?`⚠️ Péremption courte (moins de ${S.cfg.recepMois} mois) : <b>${c.map(([p,e])=>p.nom+" ("+dfr(e)+")").join(", ")}</b>. Vous pouvez refuser ces lots ou négocier un retour.`:"Toutes les dates sont à plus de ${S.cfg.recepMois} mois. ✓"}
 function valRecep(id){const o=S.orders.find(x=>x.id===id);let n=0;
   o.lines.forEach((l,i)=>{const q=+document.getElementById("rq"+i).value||0,lot=document.getElementById("rl"+i).value.trim()||"SANS-LOT",e=document.getElementById("re"+i).value||"2028-01-01";if(q>0){byId(l.pid).lots.push({n:lot,exp:e,q,prio:false});n+=q}});
-  o.st="reçue";closeLayer();render();toast(`${n} boîtes entrées en stock, avec leurs lots et dates.`)}
+  o.st="reçue";const mt=o.lines.reduce((s,l,i)=>s+(+document.getElementById("rq"+i)?.value||0)*byId(l.pid).pa,0);
+  FIN.fact.push({id:"F-"+o.id.slice(3),f:o.f,date:"2026-11-01",ech:"2026-12-01",mt,paye:0,bc:o.id});
+  closeLayer();render();toast(`${n} boîtes entrées en stock. Facture de ${fmt(mt)} ajoutée aux dettes ${FOUR[o.f].n} (échéance 01/12/2026).`)}
 
 V.inventaire=()=>{const items=P.filter(p=>p.cat===S.invCat);
   return head("Inventaire tournant","Un rayon à la fois, sur téléphone, sans fermer la pharmacie. Le stock théorique est mis à jour par la caisse.",
@@ -837,6 +841,121 @@ function scanSell(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")
 function resumeCam(){if(S.cam)S.cam.paused=false}
 
 
+
+/* ---------- Finances ---------- */
+const FIN={orgs:["IPM Transports","IPM Industries","Mutuelle des enseignants","CMU"],
+  caisse:{ouverte:true,fond:25000,par:"Moussa Diop",heure:"08:00"},
+  hist:[["31/10/2026",312400,312400,"Moussa Diop"],["30/10/2026",287900,285400,"Moussa Diop"],["29/10/2026",301250,301250,"Fatou Sarr"],["28/10/2026",276800,277300,"Moussa Diop"],["27/10/2026",265100,265100,"Fatou Sarr"]],
+  bord:[{id:"B-IPMT-09",org:"IPM Transports",mois:"Septembre 2026",mt:412600,env:"2026-10-05",paye:0},
+    {id:"B-IPMT-10",org:"IPM Transports",mois:"Octobre 2026",mt:398200,env:"",paye:0},
+    {id:"B-IPMI-08",org:"IPM Industries",mois:"Août 2026",mt:186400,env:"2026-09-04",paye:120000},
+    {id:"B-IPMI-10",org:"IPM Industries",mois:"Octobre 2026",mt:204900,env:"",paye:0},
+    {id:"B-MUT-09",org:"Mutuelle des enseignants",mois:"Septembre 2026",mt:96300,env:"2026-10-03",paye:96300},
+    {id:"B-MUT-10",org:"Mutuelle des enseignants",mois:"Octobre 2026",mt:88700,env:"",paye:0},
+    {id:"B-CMU-07",org:"CMU",mois:"Juillet 2026",mt:154800,env:"2026-08-06",paye:0},
+    {id:"B-CMU-10",org:"CMU",mois:"Octobre 2026",mt:131500,env:"",paye:0}],
+  fact:[{id:"LX-88412",f:"lab",date:"2026-10-02",ech:"2026-11-01",mt:1284500,paye:0},{id:"LX-88977",f:"lab",date:"2026-10-16",ech:"2026-11-15",mt:942300,paye:0},
+    {id:"CP-20431",f:"cop",date:"2026-10-09",ech:"2026-11-08",mt:615800,paye:300000},{id:"SD-7781",f:"sod",date:"2026-09-28",ech:"2026-10-28",mt:388900,paye:0},
+    {id:"SD-7802",f:"sod",date:"2026-10-31",ech:"2026-11-30",mt:142600,paye:0},{id:"DP-5520",f:"duo",date:"2026-10-12",ech:"2026-11-11",mt:276400,paye:276400}],
+  dep:[{d:"2026-11-01",lib:"Achat sachets et rouleaux de caisse",cat:"Fournitures",mt:6500,mode:"Espèces caisse"},
+    {d:"2026-10-31",lib:"Salaires octobre (3 personnes)",cat:"Salaires",mt:620000,mode:"Banque"},{d:"2026-10-30",lib:"Gardiennage octobre",cat:"Gardiennage",mt:60000,mode:"Wave"},
+    {d:"2026-10-28",lib:"Facture Senelec",cat:"Électricité et eau",mt:84300,mode:"Wave"},{d:"2026-10-05",lib:"Loyer octobre",cat:"Loyer",mt:350000,mode:"Banque"}],
+  rappro:{Wave:false,"Orange Money":false,"Free Money":false},
+  oct:{ventes:7384500,achats:5231200,pertes:86400,dep:1272600}};
+S.finTab="caisse";S.org=FIN.orgs[0];
+const DEPCATS=["Loyer","Salaires","Électricité et eau","Gardiennage","Transport","Fournitures","Impôts et taxes","Autre"];
+const ventesMode=m=>S.sales.filter(v=>v.mode===m).reduce((s,v)=>s+v.tot,0);
+const partPatient=()=>S.sales.filter(v=>v.mode==="Assurance").reduce((s,v)=>s+v.tot*(1-v.tp/100),0);
+const partAssur=()=>S.sales.filter(v=>v.mode==="Assurance").reduce((s,v)=>s+v.tot*v.tp/100,0);
+const depCaisseJour=()=>FIN.dep.filter(x=>x.d==="2026-11-01"&&x.mode==="Espèces caisse").reduce((s,x)=>s+x.mt,0);
+const especesAttendues=()=>Math.round(FIN.caisse.fond+ventesMode("Espèces")+partPatient()-depCaisseJour());
+const bordDu=b=>b.mt-b.paye;
+const ageJ=d=>d?-dj(d):0;
+const avoirsDe=f=>S.avoirs.filter(a=>a.p.f===f).reduce((s,a)=>s+a.v,0);
+const resteFact=x=>x.mt-x.paye;
+V.finances=()=>{const T=[["caisse","Caisse du jour"],["assur","Assurances"],["gross","Grossistes"],["dep","Dépenses"],["res","Résultat"]];
+  const cre=FIN.bord.reduce((s,b)=>s+bordDu(b),0)+partAssur(),det=FIN.fact.reduce((s,x)=>s+resteFact(x),0)-Object.keys(FOUR).reduce((s,f)=>s+avoirsDe(f),0);
+  return head("Finances","Caisse, créances des assurances, dettes grossistes, dépenses et résultat. Pour la comptabilité officielle, un export prêt pour votre comptable.",
+   `<button class="btn" data-act="export">Exporter pour le comptable</button>`)+
+  `<div class="kpis">
+    <button class="kpi" data-ftab="caisse"><span>Caisse ${FIN.caisse.ouverte?"ouverte":"clôturée"}</span><b class="num">${fmt(especesAttendues())}</b><em>espèces attendues</em></button>
+    <button class="kpi" data-ftab="assur"><span>Les assurances vous doivent</span><b class="num">${fmt(cre)}</b><em>${(n=>n+(n>1?" bordereaux":" bordereau")+" en retard")(FIN.bord.filter(b=>bordDu(b)&&b.env&&ageJ(b.env)>60).length)}</em></button>
+    <button class="kpi" data-ftab="gross"><span>Vous devez aux grossistes</span><b class="num">${fmt(det)}</b><em>${(n=>n+(n>1?" factures échues":" facture échue"))(FIN.fact.filter(x=>resteFact(x)&&dj(x.ech)<0).length)}</em></button>
+    <button class="kpi" data-ftab="res"><span>Résultat d'octobre</span><b class="num">${fmt(resOct().res)}</b><em>après achats, pertes et dépenses</em></button>
+  </div>
+  <div class="seg" role="group" aria-label="Rubrique">${T.map(([k,l])=>`<button data-ftab="${k}" aria-pressed="${S.finTab===k}">${l}</button>`).join("")}</div>`+FV[S.finTab]()};
+const FV={};
+FV.caisse=()=>{const c=FIN.caisse,att=especesAttendues(),modes=["Wave","Orange Money","Free Money"].filter(m=>ventesMode(m)||S.cfg.pays[m]);
+  const parV={};S.sales.forEach(v=>{parV[v.par]=parV[v.par]||{n:0,t:0,e:0};parV[v.par].n++;parV[v.par].t+=v.tot;if(v.mode==="Espèces")parV[v.par].e+=v.tot;if(v.mode==="Assurance")parV[v.par].e+=v.tot*(1-v.tp/100)});
+  return `<div class="grid2">
+  <section class="panel"><header><div><h2>Caisse du ${dfr("2026-11-01")}</h2><p>${c.ouverte?`Ouverte à ${c.heure} par ${esc(c.par)} · fond de caisse ${fmt(c.fond)}`:"Caisse clôturée"}</p></div><span class="st ${c.ouverte?"ok":"n"}">${c.ouverte?"Ouverte":"Clôturée"}</span></header>
+    <div class="list">
+      <div class="li"><span>Fond de caisse</span><b class="num">${fmt(c.fond)}</b></div>
+      <div class="li"><span>Ventes en espèces</span><b class="num">+ ${fmt(ventesMode("Espèces"))}</b></div>
+      <div class="li"><span>Part patient des ventes assurance</span><b class="num">+ ${fmt(partPatient())}</b></div>
+      <div class="li"><span>Dépenses payées en espèces</span><b class="num">− ${fmt(depCaisseJour())}</b></div>
+      <div class="li"><b>Espèces attendues dans le tiroir</b><b class="num">${fmt(att)}</b></div>
+    </div>
+    ${c.ouverte?`<div class="row"><div class="field"><label for="compte">Espèces comptées</label><input type="number" id="compte" class="qin" style="width:150px" inputmode="numeric" placeholder="${att}"></div><span id="ecart" class="muted">Comptez le tiroir puis saisissez le montant.</span></div>
+    <div class="row"><button class="btn pri" data-act="cloture">Clôturer la caisse</button></div>`:
+    `<div class="row"><div class="field"><label for="fond">Fond de caisse</label><input type="number" id="fond" class="qin" style="width:150px" value="25000" inputmode="numeric"></div><button class="btn pri" data-act="ouvrir">Ouvrir la caisse</button></div>`}
+  </section>
+  <section class="panel"><header><div><h2>Mobile Money</h2><p>À comparer avec les relevés de vos comptes marchands.</p></div></header>
+    <div>${modes.map(m=>`<div class="set"><div class="grow"><b>${m}</b><small>${(n=>n+(n>1?" paiements":" paiement"))(S.sales.filter(v=>v.mode===m).length)} aujourd'hui</small></div><b class="num">${fmt(ventesMode(m))}</b><label class="row" style="gap:6px;flex-wrap:nowrap"><input type="checkbox" data-rappro="${m}" ${FIN.rappro[m]?"checked":""} style="width:20px;height:20px;accent-color:var(--ink)"><span class="muted">vérifié</span></label></div>`).join("")}
+    <div class="set"><div class="grow"><b>Assurances</b><small>part prise en charge, à réclamer</small></div><b class="num">${fmt(partAssur())}</b></div></div>
+  </section></div>
+  <section class="panel"><header><div><h2>Par vendeur aujourd'hui</h2><p>Chaque vente est enregistrée au nom de la personne connectée.</p></div></header>
+    <div class="tw"><table><thead><tr><th>Vendeur</th><th class="r">Tickets</th><th class="r">Ventes</th><th class="r">Dont espèces</th></tr></thead><tbody>
+    ${Object.entries(parV).map(([n,x])=>`<tr><td><b>${esc(n)}</b></td><td class="r num">${x.n}</td><td class="r num">${fmt(x.t)}</td><td class="r num">${fmt(x.e)}</td></tr>`).join("")}</tbody></table></div></section>
+  <section class="panel"><header><div><h2>Clôtures précédentes</h2><p>Un écart qui revient souvent avec le même vendeur mérite une discussion.</p></div></header>
+    <div class="tw"><table><thead><tr><th>Jour</th><th>Clôturé par</th><th class="r">Attendu</th><th class="r">Compté</th><th class="r">Écart</th></tr></thead><tbody>
+    ${FIN.hist.map(([d,a,c,p])=>{const e=c-a;return `<tr><td class="num">${d}</td><td>${esc(p)}</td><td class="r num">${fmt(a)}</td><td class="r num">${fmt(c)}</td><td class="r"><span class="st ${e<0?"bad":e>0?"warn":"ok"}">${e?(e>0?"+ ":"− ")+fmt(Math.abs(e)):"Juste"}</span></td></tr>`}).join("")}</tbody></table></div></section>`};
+FV.assur=()=>{const orgs=FIN.orgs.map(o=>{const bs=FIN.bord.filter(b=>b.org===o),jour=S.sales.filter(v=>v.mode==="Assurance"&&v.org===o).reduce((s,v)=>s+v.tot*v.tp/100,0);return{o,bs,jour,du:bs.reduce((s,b)=>s+bordDu(b),0)+jour}});
+  return `<p class="note-box">Chaque vente au tiers payant s'ajoute au bordereau du mois de l'organisme. En fin de mois, Garab prépare le bordereau à envoyer. Vous suivez ensuite les paiements et les retards.</p>`+
+  orgs.map(({o,bs,jour,du})=>`<section class="panel"><header><div><h2>${esc(o)}</h2><p>${jour?`Novembre en cours : ${fmt(jour)} · `:""}${bs.filter(b=>bordDu(b)).length} bordereau${bs.filter(b=>bordDu(b)).length>1?"x":""} à encaisser</p></div><b class="num">${fmt(du)}</b></header>
+    <div class="tw"><table><thead><tr><th>Bordereau</th><th>Mois</th><th>Statut</th><th class="r">Montant</th><th class="r">Reste dû</th><th></th></tr></thead><tbody>
+    ${bs.map(b=>{const r=bordDu(b),a=ageJ(b.env),st=!r?'<span class="st ok">Payé</span>':!b.env?'<span class="st n">À envoyer</span>':a>60?`<span class="st bad">En retard · ${a} j</span>`:`<span class="st warn">Envoyé il y a ${a} j</span>`;
+      return `<tr><td class="lot">${b.id}</td><td>${b.mois}</td><td>${st}${b.paye&&r?` <small>déjà reçu ${fmt(b.paye)}</small>`:""}</td><td class="r num">${fmt(b.mt)}</td><td class="r num">${fmt(r)}</td>
+      <td class="r"><div class="row" style="justify-content:flex-end;gap:6px">${!r?"":!b.env?`<button class="btn sm pri" data-bsend="${b.id}">Envoyer le bordereau</button>`:`${a>45?`<button class="btn sm" data-brel="${b.id}">Relancer</button>`:""}<button class="btn sm" data-bpay="${b.id}">Paiement reçu</button>`}</div></td></tr>`}).join("")}</tbody></table></div></section>`).join("")};
+FV.gross=()=>Object.entries(FOUR).map(([k,f])=>{const fs=FIN.fact.filter(x=>x.f===k),av=avoirsDe(k),du=fs.reduce((s,x)=>s+resteFact(x),0);if(!fs.length&&!av)return"";
+  return `<section class="panel"><header><div><h2>${esc(f.n)}</h2><p>${fs.filter(x=>resteFact(x)).length} facture${fs.filter(x=>resteFact(x)).length>1?"s":""} à payer${av?` · avoir de retours ${fmt(av)} à déduire`:""}</p></div><b class="num">${fmt(du-av)}</b></header>
+  <div class="tw"><table><thead><tr><th>Facture</th><th>Reçue le</th><th>Échéance</th><th class="r">Montant</th><th class="r">Reste</th><th></th></tr></thead><tbody>
+  ${fs.map(x=>{const r=resteFact(x),d=dj(x.ech);return `<tr><td class="lot">${x.id}${x.bc?` <small>${x.bc}</small>`:""}</td><td class="num">${dfr(x.date)}</td><td>${!r?'<span class="st ok">Payée</span>':d<0?`<span class="st bad">Échue depuis ${-d} j</span>`:d<=7?`<span class="st warn">Dans ${d} j</span>`:`<span class="num">${dfr(x.ech)}</span>`}</td>
+  <td class="r num">${fmt(x.mt)}</td><td class="r num">${fmt(r)}</td><td class="r">${r?`<button class="btn sm" data-fpay="${x.id}">Payer</button>`:""}</td></tr>`}).join("")}</tbody></table></div></section>`}).join("")||'<section class="panel"><p class="empty">Aucune facture.</p></section>';
+FV.dep=()=>`<section class="panel"><header><div><h2>Ajouter une dépense</h2><p>Une dépense payée en espèces est retirée de la caisse du jour.</p></div></header>
+  <div class="form"><div class="field full"><label for="dlib">Libellé</label><input type="text" id="dlib" placeholder="ex. Facture Senelec, transport livraison…"></div>
+  <div class="field"><label for="dcat">Catégorie</label><select id="dcat">${DEPCATS.map(c=>`<option>${c}</option>`).join("")}</select></div>
+  <div class="field"><label for="dmt">Montant (F)</label><input type="number" id="dmt" inputmode="numeric" min="0"></div>
+  <div class="field full"><label for="dmode">Payé par</label><select id="dmode">${["Espèces caisse","Wave","Orange Money","Banque","Chèque"].map(m=>`<option>${m}</option>`).join("")}</select></div></div>
+  <div class="row"><button class="btn pri" data-act="adddep">Ajouter</button></div></section>
+  <section class="panel"><header><div><h2>Dépenses récentes</h2><p>Novembre : ${fmt(FIN.dep.filter(x=>x.d>="2026-11-01").reduce((s,x)=>s+x.mt,0))} · octobre : ${fmt(FIN.dep.filter(x=>x.d<"2026-11-01"&&x.d>="2026-10-01").reduce((s,x)=>s+x.mt,0))} (saisi)</p></div></header>
+  <div class="tw"><table><thead><tr><th>Dépense</th><th>Date</th><th>Catégorie</th><th>Payé par</th><th class="r">Montant</th></tr></thead><tbody>
+  ${FIN.dep.slice().sort((a,b)=>a.d<b.d?1:-1).map(x=>`<tr><td><b>${esc(x.lib)}</b></td><td class="num">${dfr(x.d)}</td><td>${esc(x.cat)}</td><td>${esc(x.mode)}</td><td class="r num">${fmt(x.mt)}</td></tr>`).join("")}</tbody></table></div></section>`;
+function resOct(){const o=FIN.oct,mb=o.ventes-o.achats;return{...o,mb,res:mb-o.pertes-o.dep}}
+function resNov(){const ventes=ventesJour(),achats=S.sales.reduce((s,v)=>s+v.items.reduce((a,i)=>a+i.q*((byId(i.pid)||{pa:i.pv/1.3}).pa),0),0),pertes=S.pertes.reduce((s,x)=>s+x.v,0),dep=FIN.dep.filter(x=>x.d>="2026-11-01").reduce((s,x)=>s+x.mt,0),mb=ventes-achats;return{ventes,achats,pertes,dep,mb,res:mb-pertes-dep}}
+FV.res=()=>{const o=resOct(),n=resNov(),row=(l,a,b,cls="",neg)=>`<tr${cls?` class="${cls}"`:""}><td>${l}</td><td class="r num">${neg?"− ":""}${fmt(a)}</td><td class="r num">${neg?"− ":""}${fmt(b)}</td></tr>`;
+  return `<section class="panel"><header><div><h2>Résultat simplifié</h2><p>Ce que la pharmacie a vraiment gagné. Calculé à partir des ventes, des prix d'achat, des pertes et des dépenses saisies.</p></div></header>
+  <div class="tw"><table><thead><tr><th>Poste</th><th class="r">Octobre 2026</th><th class="r">Novembre (en cours)</th></tr></thead><tbody>
+  ${row("Ventes",o.ventes,n.ventes)}${row("Coût d'achat des produits vendus",o.achats,n.achats,"",1)}
+  <tr><td><b>Marge brute</b> <small>${Math.round(o.mb/o.ventes*100)} % des ventes en octobre</small></td><td class="r num"><b>${fmt(o.mb)}</b></td><td class="r num"><b>${fmt(n.mb)}</b></td></tr>
+  ${row("Produits jetés (péremption)",o.pertes,n.pertes,"",1)}${row("Dépenses",o.dep,n.dep,"",1)}
+  </tbody><tfoot><tr><td>Résultat</td><td class="r num" style="color:${o.res>=0?"var(--ok)":"var(--bad)"}">${fmt(o.res)}</td><td class="r num">${fmt(n.res)}</td></tr></tfoot></table></div>
+  <p class="note-box">C'est un résultat de gestion, pas le résultat comptable officiel : amortissements, impôts et charges sociales sont faits par votre comptable. L'export lui donne les ventes, les achats, les dépenses et les créances du mois.</p></section>`};
+function exportCompta(){const L=[["Type","Date","Pièce","Libellé","Tiers","Mode","Montant (F)"]];
+  S.sales.forEach((v,i)=>L.push(["Vente","01/11/2026","T"+String(i+1).padStart(4,"0"),v.items.map(x=>x.q+" x "+((byId(x.pid)||{}).nom||"")).join(" + "),v.org||"Client comptoir",v.mode,v.tot]));
+  FIN.fact.forEach(x=>L.push(["Achat",dfr(x.date),x.id,"Facture grossiste",FOUR[x.f]?FOUR[x.f].n:x.f,x.paye>=x.mt?"Payée":"À payer",x.mt]));
+  FIN.dep.forEach(x=>L.push(["Dépense",dfr(x.d),"",x.lib,x.cat,x.mode,x.mt]));
+  FIN.bord.forEach(b=>L.push(["Créance assurance","",b.id,"Bordereau "+b.mois,b.org,b.paye>=b.mt?"Payé":"À encaisser",b.mt]));
+  const csv="﻿"+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\r\n");
+  try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="garab-comptable-2026-11.csv";document.body.appendChild(a);a.click();a.remove();
+    toast("Fichier pour le comptable téléchargé (ouvrable dans Excel). La version complète l'envoie aussi par e-mail chaque mois.")}catch(e){toast("Téléchargement impossible sur cette page.")}}
+function payModal(kind,id){const x=kind==="f"?FIN.fact.find(z=>z.id===id):FIN.bord.find(z=>z.id===id),reste=kind==="f"?resteFact(x):bordDu(x),av=kind==="f"?avoirsDe(x.f):0;
+  layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Paiement"><div class="top"><div><h2>${kind==="f"?"Payer "+x.id:"Paiement reçu · "+x.id}</h2><p>${kind==="f"?esc(FOUR[x.f].n):esc(x.org)+" · "+x.mois} · reste ${fmt(reste)}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <div class="form"><div class="field"><label for="pmt">Montant</label><input type="number" id="pmt" inputmode="numeric" value="${Math.max(0,reste-(av&&kind==="f"?Math.min(av,reste):0))}"></div>
+  <div class="field"><label for="pmode">${kind==="f"?"Payé par":"Reçu par"}</label><select id="pmode">${["Virement","Chèque","Wave","Orange Money","Espèces"].map(m=>`<option>${m}</option>`).join("")}</select></div></div>
+  ${kind==="f"&&av?`<p class="note-box">Un avoir de ${fmt(av)} (retours de produits) peut être déduit : le montant proposé en tient compte.</p>`:""}
+  <div class="row"><button class="btn pri" data-payok="${kind}|${x.id}">Enregistrer</button><button class="btn" data-close="1">Annuler</button></div></div>`,true)}
+
 /* ---------- Changement d'utilisateur (code PIN) ---------- */
 function whoPick(){layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Qui utilise Garab ?"><div class="top"><div><h2>Qui utilise Garab ?</h2><p>Chacun se connecte avec son code. Les ventes sont enregistrées à son nom.</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
   <div style="display:flex;flex-direction:column;gap:8px">${S.users.filter(u=>u.actif).map(u=>`<button class="pick" data-pick="${u.id}" aria-current="${u.id===S.uid}"><span class="av">${initials(u)}</span><span class="nm"><b>${esc(u.nom)}</b><small>${roleName(u)}</small></span>${u.id===S.uid?'<span class="st ok">connecté</span>':""}</button>`).join("")}</div>
@@ -959,6 +1078,15 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(d.pinok){const u=S.users.find(x=>x.id===+d.pinok);if(document.getElementById("pin").value===u.pin)switchUser(u);else{toast("Code incorrect.");document.getElementById("pin").value=""}return}
   if(d.rem!=null&&d.rem!==undefined&&t.closest(".ticket")){S.remise=+d.rem;render(true);return}
   if(d.stab){S.setTab=d.stab;render(true);return}
+  if(d.ftab){S.finTab=d.ftab;render(true);return}
+  if(d.bsend){const b=FIN.bord.find(x=>x.id===d.bsend);b.env="2026-11-01";render(true);toast(`Bordereau ${b.id} (${fmt(b.mt)}) envoyé à ${b.org} : PDF par e-mail et copie WhatsApp (démo).`);return}
+  if(d.brel){const b=FIN.bord.find(x=>x.id===d.brel);toast(`Relance envoyée à ${b.org} pour ${fmt(bordDu(b))} (démo).`);return}
+  if(d.bpay){payModal("b",d.bpay);return}
+  if(d.fpay){payModal("f",d.fpay);return}
+  if(d.payok){const[k,id]=d.payok.split("|"),m=Math.max(0,parseInt(document.getElementById("pmt").value)||0),mode=document.getElementById("pmode").value;
+    if(k==="f"){const x=FIN.fact.find(z=>z.id===id),av=avoirsDe(x.f),use=Math.min(av,resteFact(x)-m>0?resteFact(x)-m:0);x.paye=Math.min(x.mt,x.paye+m+use);if(use){let r=use;S.avoirs.filter(a=>a.p.f===x.f).forEach(a=>{const t=Math.min(a.v,r);a.v-=t;r-=t})}
+      closeLayer();render(true);toast(`Facture ${id} : ${fmt(m)} payés par ${mode}${use?` + avoir ${fmt(use)}`:""}.`)}
+    else{const b=FIN.bord.find(z=>z.id===id);b.paye=Math.min(b.mt,b.paye+m);closeLayer();render(true);toast(`${b.org} : ${fmt(m)} reçus (${mode}).${bordDu(b)?` Reste ${fmt(bordDu(b))}.`:" Bordereau soldé."}`)}return}
   if(d.member){member(+d.member);return}
   if(d.saveuser){saveUser(+d.saveuser);return}
   if(d.toggleuser){const u=S.users.find(x=>x.id===+d.toggleuser);if(u.id===S.uid){toast("Vous ne pouvez pas vous désactiver vous-même.");return}u.actif=!u.actif;render(true);toast(`${u.nom} ${u.actif?"réactivé":"désactivé : il ne peut plus se connecter"}.`);return}
@@ -986,6 +1114,12 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(a==="encaisser")return encaisser();
   if(a==="who")return whoPick();
   if(a==="newprod")return editProd(0);
+  if(a==="export")return exportCompta();
+  if(a==="cloture"){const v=document.getElementById("compte").value;if(v===""){toast("Saisissez les espèces comptées.");return}const c=+v,att=especesAttendues(),e=c-att;
+    FIN.hist.unshift(["01/11/2026",att,c,me().nom]);FIN.caisse.ouverte=false;render(true);toast(e?`Caisse clôturée avec un écart de ${e>0?"+":"−"} ${fmt(Math.abs(e))}. Le titulaire est prévenu sur WhatsApp.`:"Caisse clôturée : le compte est juste.");return}
+  if(a==="ouvrir"){FIN.caisse={ouverte:true,fond:Math.max(0,parseInt(document.getElementById("fond").value)||0),par:me().nom,heure:"18:30"};render(true);toast("Caisse ouverte.");return}
+  if(a==="adddep"){const lib=document.getElementById("dlib").value.trim(),mt=parseInt(document.getElementById("dmt").value)||0;if(!lib||!mt){toast("Indiquez le libellé et le montant.");return}
+    const mode=document.getElementById("dmode").value;FIN.dep.push({d:"2026-11-01",lib,cat:document.getElementById("dcat").value,mt,mode});render(true);toast(`Dépense ajoutée : ${fmt(mt)}${mode==="Espèces caisse"?", retirée de la caisse du jour":""}.`);return}
   if(a==="savepharma"){const g=k=>document.getElementById(k).value.trim();Object.assign(S.cfg,{nom:g("cnom")||S.cfg.nom,adr:g("cadr"),tel:g("ctel"),wa:g("cwa"),heure:/^\d{1,2}:\d{2}$/.test(g("cheure"))?g("cheure"):S.cfg.heure,ticket:g("cticket")});render(true);toast("Informations de la pharmacie enregistrées.");return}
   if(a==="addcat"){const v=document.getElementById("newcat").value.trim();if(!v){toast("Indiquez le nom du rayon.");return}if(CATS.includes(v)){toast("Ce rayon existe déjà.");return}CATS.push(v);render(true);toast(`Rayon « ${v} » ajouté.`);return}
   if(a==="addfour"){const v=document.getElementById("newfour").value.trim();if(!v){toast("Indiquez le nom du grossiste.");return}FOUR["g"+Date.now()]={n:v,d:2,ret:false,wa:""};render(true);toast(`${v} ajouté.`);return}
@@ -1006,10 +1140,13 @@ document.addEventListener("input",e=>{const t=e.target;
   if(t.id==="cq"){S.q=t.value;fillRes();return}
   if(t.id==="sq"){S.q=t.value;fillStock();return}
   if(t.dataset.cq){S.cmdQ[t.dataset.cq]=Math.max(0,parseInt(t.value)||0);return}
+  if(t.id==="compte"){const el=document.getElementById("ecart"),v=t.value;if(v===""){el.textContent="Comptez le tiroir puis saisissez le montant.";el.style.color="";return}const e=+v-especesAttendues();el.innerHTML=e?`Écart : <b>${e>0?"+ ":"− "}${fmt(Math.abs(e))}</b>`:"<b>Compte juste ✓</b>";el.style.color=e<0?"var(--bad)":e>0?"var(--warn)":"var(--ok)";return}
   if(t.dataset.inv){S.inv[t.dataset.inv]=t.value===""?null:Math.max(0,parseInt(t.value)||0);invTotals();return}
   if(t.id&&t.id.startsWith("re")){const o=S.orders.find(x=>x.id===(document.querySelector("[data-recok]")||{}).dataset?.recok);o&&rwarn(o)}});
 document.addEventListener("change",e=>{const t=e.target;
   if(t.dataset.cq){render(true);return}
+  if(t.id==="org"){S.org=t.value;render(true);return}
+  if(t.dataset.rappro){FIN.rappro[t.dataset.rappro]=t.checked;toast(t.checked?`${t.dataset.rappro} : montant vérifié avec le relevé.`:"Vérification retirée.");return}
   if(t.dataset.cat!==undefined){const i=+t.dataset.cat,old=CATS[i],v=t.value.trim();if(!v||v===old){t.value=old;return}if(CATS.includes(v)){toast("Ce rayon existe déjà.");t.value=old;return}P.forEach(p=>{if(p.cat===old)p.cat=v});CATS[i]=v;if(S.invCat===old)S.invCat=v;if(S.fcat===old)S.fcat=v;render(true);toast(`Rayon renommé : « ${v} ».`);return}
   if(t.dataset.four){const[k,f]=t.dataset.four.split("|");FOUR[k][f]=f==="d"?Math.max(0,parseInt(t.value)||0):t.value.trim();toast(`${FOUR[k].n} : enregistré.`);return}
   if(t.dataset.fret){FOUR[t.dataset.fret].ret=t.checked;toast(`${FOUR[t.dataset.fret].n} ${t.checked?"reprend":"ne reprend pas"} les produits.`);return}
