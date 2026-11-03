@@ -941,12 +941,15 @@ FV.res=()=>{const o=resOct(),n=resNov(),row=(l,a,b,cls="",neg)=>`<tr${cls?` clas
   ${row("Produits jetés (péremption)",o.pertes,n.pertes,"",1)}${row("Dépenses",o.dep,n.dep,"",1)}
   </tbody><tfoot><tr><td>Résultat</td><td class="r num" style="color:${o.res>=0?"var(--ok)":"var(--bad)"}">${fmt(o.res)}</td><td class="r num">${fmt(n.res)}</td></tr></tfoot></table></div>
   <p class="note-box">C'est un résultat de gestion, pas le résultat comptable officiel : amortissements, impôts et charges sociales sont faits par votre comptable. L'export lui donne les ventes, les achats, les dépenses et les créances du mois.</p></section>`};
+let DL=null;try{window.claude&&typeof window.claude.use==="function"&&window.claude.use("downloads").then(d=>{DL=d}).catch(()=>{})}catch(e){}
 function exportCompta(){const L=[["Type","Date","Pièce","Libellé","Tiers","Mode","Montant (F)"]];
   S.sales.forEach((v,i)=>L.push(["Vente","01/11/2026","T"+String(i+1).padStart(4,"0"),v.items.map(x=>x.q+" x "+((byId(x.pid)||{}).nom||"")).join(" + "),v.org||"Client comptoir",v.mode,v.tot]));
   FIN.fact.forEach(x=>L.push(["Achat",dfr(x.date),x.id,"Facture grossiste",FOUR[x.f]?FOUR[x.f].n:x.f,x.paye>=x.mt?"Payée":"À payer",x.mt]));
   FIN.dep.forEach(x=>L.push(["Dépense",dfr(x.d),"",x.lib,x.cat,x.mode,x.mt]));
   FIN.bord.forEach(b=>L.push(["Créance assurance","",b.id,"Bordereau "+b.mois,b.org,b.paye>=b.mt?"Payé":"À encaisser",b.mt]));
   const csv="﻿"+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\r\n");
+  const fn="garab-comptable-2026-11.csv";
+  if(DL){DL.save({filename:fn,data:csv}).then(()=>toast("Fichier pour le comptable enregistré (ouvrable dans Excel).")).catch(e=>toast(e&&e.code==="declined"?"Téléchargement annulé.":"Téléchargement indisponible sur cette page."));return}
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="garab-comptable-2026-11.csv";document.body.appendChild(a);a.click();a.remove();
     toast("Fichier pour le comptable téléchargé (ouvrable dans Excel). La version complète l'envoie aussi par e-mail chaque mois.")}catch(e){toast("Téléchargement impossible sur cette page.")}}
 function payModal(kind,id){const x=kind==="f"?FIN.fact.find(z=>z.id===id):FIN.bord.find(z=>z.id===id),reste=kind==="f"?resteFact(x):bordDu(x),av=kind==="f"?avoirsDe(x.f):0;
