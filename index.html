@@ -50,8 +50,18 @@ button,input,select,textarea{font:inherit;color:inherit}
 .brand small{display:block;opacity:.78;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase}
 .role{display:flex;flex-direction:column;gap:4px;padding:0 8px}
 .role label{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
-.role select{background:color-mix(in srgb,var(--ink-fg) 14%,transparent);color:var(--ink-fg);border:1px solid color-mix(in srgb,var(--ink-fg) 30%,transparent);border-radius:8px;padding:7px 8px}
-.role select option{color:#13201B;background:#fff}
+.who{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--ink-fg) 14%,transparent);border:1px solid color-mix(in srgb,var(--ink-fg) 28%,transparent)}
+.who:hover{background:color-mix(in srgb,var(--ink-fg) 22%,transparent)}
+.who:focus-visible{outline:3px solid var(--acc)}
+.who .av{width:34px;height:34px;font-size:.8rem;background:var(--ink-fg);color:var(--ink)}
+.who .nm{flex:1;min-width:0;line-height:1.25}
+.who .nm b{display:block;font-size:.92rem;overflow-wrap:anywhere}
+.who .nm small{display:block;font-size:.76rem;opacity:.8}
+.who .chev{flex:none;opacity:.8;font-size:.8rem}
+.pick{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+.pick:hover{border-color:var(--ink)} .pick:focus-visible{outline:3px solid var(--acc)}
+.pick[aria-current="true"]{border-color:var(--ink);box-shadow:0 0 0 2px color-mix(in srgb,var(--ink) 25%,transparent)}
+.pick .nm{flex:1;min-width:0} .pick .nm small{display:block;color:var(--muted);font-size:.82rem}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95rem}
 .nav button:hover{background:color-mix(in srgb,var(--ink-fg) 12%,transparent)}
@@ -221,8 +231,9 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
   .side{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;justify-content:space-between;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));gap:10px;z-index:20;overflow:visible}
   .brand{padding:0;gap:8px} .brand b{font-size:1.25rem} .brand small{display:none} .brand svg{width:26px;height:26px}
   .role,.nav,.side .foot{display:none}
-  .mrole{display:block;background:color-mix(in srgb,var(--ink-fg) 16%,transparent);color:var(--ink-fg);border:1px solid color-mix(in srgb,var(--ink-fg) 30%,transparent);border-radius:99px;padding:6px 12px;font-size:.85rem;font-weight:700;max-width:58%}
-  .mrole option{color:#13201B;background:#fff}
+  .mrole{display:flex;align-items:center;gap:8px;max-width:60%;cursor:pointer;background:color-mix(in srgb,var(--ink-fg) 16%,transparent);color:var(--ink-fg);border:1px solid color-mix(in srgb,var(--ink-fg) 30%,transparent);border-radius:99px;padding:4px 12px 4px 4px;font:inherit;font-size:.88rem;font-weight:700}
+  .mrole .av{width:28px;height:28px;font-size:.72rem;background:var(--ink-fg);color:var(--ink)}
+  .mrole span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   main{padding-top:16px;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));gap:16px}
   h1{font-size:1.45rem} .top p{font-size:.9rem}
   .tabbar{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));box-shadow:0 -4px 16px rgba(0,0,0,.08)}
@@ -277,13 +288,10 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
       <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="currentColor" opacity=".16"/><path d="M12 6h6v6h6v6h-6v6h-6v-6H6v-6h6z" fill="currentColor"/></svg>
       <div><b>Garab</b><small>Stock pharmacie</small></div>
     </div>
-    <select class="mrole" id="mrole" aria-label="Je suis"><option value="titulaire">Titulaire</option><option value="vendeur">Vendeur</option></select>
+    <button class="mrole" id="mrole" data-act="who" aria-label="Changer d'utilisateur"></button>
     <div class="role">
-      <label for="role">Je suis</label>
-      <select id="role">
-        <option value="titulaire">Pharmacien titulaire</option>
-        <option value="vendeur">Vendeur au comptoir</option>
-      </select>
+      <span class="lbl" style="color:inherit;opacity:.8;font-size:.7rem">Connecté</span>
+      <button class="who" id="role" data-act="who" aria-label="Changer d'utilisateur"></button>
     </div>
     <nav class="nav" id="nav" aria-label="Sections"></nav>
     <div class="foot">Démo</div>
@@ -357,6 +365,7 @@ const me=()=>S.users.find(u=>u.id===S.uid)||S.users[0];
 const isTit=()=>me().role==="titulaire";
 const can=k=>isTit()||!!(me().perm&&me().perm[k]);
 const short=u=>u.role==="titulaire"?"Dr "+u.nom.split(" ").pop():u.nom.split(" ")[0];
+const initials=u=>esc(u.nom.replace(/^Dr\s+/,"").split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase());
 const roleName=u=>u.role==="titulaire"?"Titulaire":(ROLES[u.role]||{}).n||u.role;
 const payModes=()=>Object.keys(S.cfg.pays).filter(k=>S.cfg.pays[k]);
 /* ---------- Calculs « pensés pharmacie » ---------- */
@@ -414,9 +423,10 @@ function nav(){const items=navItems();if(!items.some(i=>i[0]===S.view))S.view=it
       `<button data-go="${k}" ${S.view===k?'aria-current="page"':""}>${svg(k)}<span>${SHORT[k]}</span>${it&&it[2]?`<span class="dot">${it[2]}</span>`:""}</button>`};
   tb.style.setProperty("--n",main.length+(rest.length?1:0));
   tb.innerHTML=main.map(btn).join("")+(rest.length?`<button data-act="more" ${rest.some(i=>i[0]===S.view)?'aria-current="page"':""}>${svg("plus")}<span>Plus</span>${restN?`<span class="dot">${restN}</span>`:""}</button>`:"");
-  const opts=S.users.filter(u=>u.actif).map(u=>`<option value="${u.id}" ${u.id===S.uid?"selected":""}>${esc(u.nom)} · ${roleName(u)}</option>`).join("");
-  document.getElementById("role").innerHTML=opts;document.getElementById("mrole").innerHTML=S.users.filter(u=>u.actif).map(u=>`<option value="${u.id}" ${u.id===S.uid?"selected":""}>${esc(short(u))}</option>`).join("");
-  document.querySelector(".side .foot").innerHTML=`${esc(S.cfg.nom)} (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 7`}
+  const u=me(),ini=initials(u);
+  document.getElementById("role").innerHTML=`<span class="av">${ini}</span><span class="nm"><b>${esc(u.nom)}</b><small>${roleName(u)} · changer</small></span><span class="chev">▾</span>`;
+  document.getElementById("mrole").innerHTML=`<span class="av">${ini}</span><span>${esc(short(u))}</span>`;
+  document.querySelector(".side .foot").innerHTML=`${esc(S.cfg.nom)} (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 8`}
 function more(){const items=navItems(),main=can("dash")?["accueil","caisse","scanner","stock"]:["caisse","scanner","stock","peremption"];
   layer(`<div class="sheet" role="dialog" aria-modal="true" aria-label="Plus"><div class="grab"></div>${items.filter(i=>!main.includes(i[0])).map(([k,l,n])=>`<button class="it" data-go="${k}" ${S.view===k?'aria-current="page"':""}>${svg(k)}${l}${n?`<span class="pill">${n}</span>`:""}</button>`).join("")}
   <p class="muted" style="font-size:.8rem;padding:8px 10px">${esc(S.cfg.nom)} (exemple) · connecté : ${esc(me().nom)} (${roleName(me())}) · démo, rien n'est sauvegardé ni payé.</p></div>`)}
@@ -828,6 +838,9 @@ function resumeCam(){if(S.cam)S.cam.paused=false}
 
 
 /* ---------- Changement d'utilisateur (code PIN) ---------- */
+function whoPick(){layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Qui utilise Garab ?"><div class="top"><div><h2>Qui utilise Garab ?</h2><p>Chacun se connecte avec son code. Les ventes sont enregistrées à son nom.</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <div style="display:flex;flex-direction:column;gap:8px">${S.users.filter(u=>u.actif).map(u=>`<button class="pick" data-pick="${u.id}" aria-current="${u.id===S.uid}"><span class="av">${initials(u)}</span><span class="nm"><b>${esc(u.nom)}</b><small>${roleName(u)}</small></span>${u.id===S.uid?'<span class="st ok">connecté</span>':""}</button>`).join("")}</div>
+  ${isTit()?'<button class="btn" data-go="parametres" data-stabgo="equipe">Gérer l\'équipe</button>':""}</div>`,true)}
 function askPin(u){if(!u.pin){switchUser(u);return}
   layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Code"><div class="top"><div><h2>${esc(u.nom)}</h2><p>${roleName(u)} · entrez votre code à 4 chiffres</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
   <input type="password" id="pin" class="pin" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Code PIN">
@@ -878,7 +891,7 @@ SET.pharmacie=()=>{const c=S.cfg;return `<section class="panel"><header><div><h2
   </div>
   <div class="row"><button class="btn pri" data-act="savepharma">Enregistrer</button></div></section>`};
 SET.equipe=()=>`<section class="panel"><header><div><h2>L'équipe</h2><p>Chacun a son code à 4 chiffres et ses droits. Les ventes sont enregistrées au nom de la personne connectée.</p></div><button class="btn pri" data-member="0">Ajouter un membre</button></header>
-  <div>${S.users.map(u=>`<div class="member ${u.actif?"":"off"}"><span class="av">${esc(u.nom.replace("Dr ","").split(" ").map(w=>w[0]).slice(0,2).join(""))}</span>
+  <div>${S.users.map(u=>`<div class="member ${u.actif?"":"off"}"><span class="av">${initials(u)}</span>
     <div class="grow" style="flex:1;min-width:0"><b>${esc(u.nom)}</b>${u.id===S.uid?' <span class="st ok">connecté</span>':""}<small class="muted" style="display:block">${roleName(u)} · ${esc(u.tel)}${u.actif?"":" · désactivé"}</small>
     ${u.role!=="titulaire"?`<small class="muted" style="display:block">${PERMS.filter(([k])=>u.perm[k]).map(x=>x[2]).join(" · ")||"Caisse, scanner et stock uniquement"}</small>`:'<small class="muted" style="display:block">Accès complet, paramètres et abonnement</small>'}</div>
     ${u.role!=="titulaire"?`<div class="row" style="gap:6px"><button class="btn sm" data-member="${u.id}">Modifier</button><button class="btn sm" data-toggleuser="${u.id}">${u.actif?"Désactiver":"Réactiver"}</button></div>`:`<button class="btn sm" data-member="${u.id}">Modifier</button>`}</div>`).join("")}</div></section>
@@ -930,7 +943,7 @@ SET.regles=()=>{const c=S.cfg,num=(k,l,h,min,max,unit)=>`<div class="set"><div c
 /* ---------- Événements ---------- */
 document.addEventListener("click",e=>{const t=e.target.closest("button,[data-prod],[data-close]");if(!t)return;const d=t.dataset;
   if(d.close&&(e.target===t)){closeLayer();return}
-  if(d.go){if(d.tab)S.perTab=d.tab;if(d.mode)S.scanMode=d.mode;go(d.go);return}
+  if(d.go){if(d.tab)S.perTab=d.tab;if(d.stabgo)S.setTab=d.stabgo;if(d.mode)S.scanMode=d.mode;go(d.go);return}
   if(d.prod){fiche(d.prod);return}
   if(d.add){addCart(d.add);return}
   if(d.q){const[pid,s]=d.q.split("|"),c=S.cart.find(x=>x.pid===+pid);if(+s>0)return addCart(pid);c.q--;if(!c.q)S.cart=S.cart.filter(x=>x!==c);render(true);return}
@@ -942,6 +955,7 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(d.recv){recevoir(d.recv);return}
   if(d.recok){valRecep(d.recok);return}
   if(d.pm){payer(d.pm);return}
+  if(d.pick){const u=S.users.find(x=>x.id===+d.pick);if(u.id===S.uid){closeLayer();return}askPin(u);return}
   if(d.pinok){const u=S.users.find(x=>x.id===+d.pinok);if(document.getElementById("pin").value===u.pin)switchUser(u);else{toast("Code incorrect.");document.getElementById("pin").value=""}return}
   if(d.rem!=null&&d.rem!==undefined&&t.closest(".ticket")){S.remise=+d.rem;render(true);return}
   if(d.stab){S.setTab=d.stab;render(true);return}
@@ -970,6 +984,7 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(a==="scanmanual"){S.cur={raw:"",kind:"Saisie manuelle",manual:true,gtin:"",lot:"",exp:"",serie:"",p:null};V_scanRes();return}
   if(a==="scanmode"){S.scanMode=d.m;document.querySelectorAll("[data-smode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.smode===S.scanMode));V_scanRes();return}
   if(a==="encaisser")return encaisser();
+  if(a==="who")return whoPick();
   if(a==="newprod")return editProd(0);
   if(a==="savepharma"){const g=k=>document.getElementById(k).value.trim();Object.assign(S.cfg,{nom:g("cnom")||S.cfg.nom,adr:g("cadr"),tel:g("ctel"),wa:g("cwa"),heure:/^\d{1,2}:\d{2}$/.test(g("cheure"))?g("cheure"):S.cfg.heure,ticket:g("cticket")});render(true);toast("Informations de la pharmacie enregistrées.");return}
   if(a==="addcat"){const v=document.getElementById("newcat").value.trim();if(!v){toast("Indiquez le nom du rayon.");return}if(CATS.includes(v)){toast("Ce rayon existe déjà.");return}CATS.push(v);render(true);toast(`Rayon « ${v} » ajouté.`);return}
@@ -994,7 +1009,6 @@ document.addEventListener("input",e=>{const t=e.target;
   if(t.dataset.inv){S.inv[t.dataset.inv]=t.value===""?null:Math.max(0,parseInt(t.value)||0);invTotals();return}
   if(t.id&&t.id.startsWith("re")){const o=S.orders.find(x=>x.id===(document.querySelector("[data-recok]")||{}).dataset?.recok);o&&rwarn(o)}});
 document.addEventListener("change",e=>{const t=e.target;
-  if(t.id==="role"||t.id==="mrole"){const u=S.users.find(x=>x.id===+t.value);t.value=S.uid;if(u&&u.id!==S.uid)askPin(u);return}
   if(t.dataset.cq){render(true);return}
   if(t.dataset.cat!==undefined){const i=+t.dataset.cat,old=CATS[i],v=t.value.trim();if(!v||v===old){t.value=old;return}if(CATS.includes(v)){toast("Ce rayon existe déjà.");t.value=old;return}P.forEach(p=>{if(p.cat===old)p.cat=v});CATS[i]=v;if(S.invCat===old)S.invCat=v;if(S.fcat===old)S.fcat=v;render(true);toast(`Rayon renommé : « ${v} ».`);return}
   if(t.dataset.four){const[k,f]=t.dataset.four.split("|");FOUR[k][f]=f==="d"?Math.max(0,parseInt(t.value)||0):t.value.trim();toast(`${FOUR[k].n} : enregistré.`);return}
