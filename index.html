@@ -161,6 +161,29 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
 .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:.92rem}
 .kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 .raw{font-family:var(--mono);font-size:.75rem;background:var(--sunk);padding:6px 8px;border-radius:6px;word-break:break-all;color:var(--muted)}
+.switch{position:relative;width:46px;height:26px;flex:none;display:inline-block}
+.switch input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;background:var(--line);border-radius:99px;transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked+span{background:var(--ok)}
+.switch input:checked+span::after{transform:translateX(20px)}
+.switch input:focus-visible+span{outline:3px solid var(--acc);outline-offset:2px}
+.set{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--sunk)}
+.set:last-child{border-bottom:0}
+.set small{display:block;color:var(--muted);font-size:.82rem}
+.set .grow{flex:1;min-width:0}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form .full{grid-column:1/-1}
+.form input,.form select,.form textarea{width:100%}
+.member{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--sunk)}
+.member:last-child{border-bottom:0}
+.av{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--ok-soft);color:var(--ok)}
+.member.off{opacity:.55}
+.perms{display:flex;flex-direction:column}
+.perms label{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--sunk);cursor:pointer}
+.perms input{width:20px;height:20px;flex:none;accent-color:var(--ink)}
+.pin{font-family:var(--mono);font-size:1.6rem;letter-spacing:.4em;text-align:center;width:180px}
+@media (max-width:760px){.form{grid-template-columns:minmax(0,1fr)}.member{flex-wrap:wrap}.member>.grow{flex:1 1 calc(100% - 56px)!important}.member>.row,.member>.btn{margin-left:52px}}
 .muted{color:var(--muted)}
 .empty{color:var(--muted);font-size:.9rem;padding:8px 0}
 .lot{font-family:var(--mono);font-size:.82rem}
@@ -263,7 +286,7 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
       </select>
     </div>
     <nav class="nav" id="nav" aria-label="Sections"></nav>
-    <div class="foot">Pharmacie Keur Garab (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 6</div>
+    <div class="foot">Démo</div>
   </aside>
   <main id="main"></main>
   <nav class="tabbar" id="tabbar" aria-label="Navigation"></nav>
@@ -317,11 +340,25 @@ const P=RAW.split("\n").map(r=>{const[id,nom,pres,cat,pv,pa,vj,f,lots]=r.split("
 const byId=id=>P.find(p=>p.id===+id);
 
 let seed=7;const rng=()=>(seed=(seed*16807)%2147483647)/2147483647;
-const S={role:"titulaire",view:"accueil",cart:[],pay:"Espèces",q:"",fcat:"",fst:"",perTab:"perimes",couv:14,cmdQ:{},invCat:CATS[0],inv:{},
+const PERMS=[["dash","Voir le tableau de bord et les chiffres du jour","Tableau de bord"],["achat","Voir les prix d'achat et les marges","Prix d'achat"],["remise","Accorder des remises en caisse","Remises"],["per","Retirer des lots périmés et préparer les retours","Retraits et retours"],["recep","Réceptionner les livraisons","Réceptions"],["cmd","Passer les commandes aux grossistes","Commandes"],["inv","Faire les inventaires","Inventaires"],["prod","Créer et modifier les produits et les prix","Produits et prix"]];
+const ROLES={adjoint:{n:"Pharmacien adjoint",perm:["dash","achat","remise","per","recep","cmd","inv","prod"]},vendeur:{n:"Vendeur",perm:["per","recep"]},stagiaire:{n:"Stagiaire",perm:[]}};
+const permOf=r=>Object.fromEntries(PERMS.map(([k])=>[k,(ROLES[r]||{perm:[]}).perm.includes(k)]));
+const S={role:"titulaire",uid:1,users:[{id:1,nom:"Dr Aïssatou Ndiaye",role:"titulaire",tel:"77 000 00 00",pin:"0000",actif:true},
+    {id:2,nom:"Fatou Sarr",role:"adjoint",tel:"78 000 00 01",pin:"2468",actif:true,perm:permOf("adjoint")},
+    {id:3,nom:"Moussa Diop",role:"vendeur",tel:"76 000 00 02",pin:"1234",actif:true,perm:permOf("vendeur")}],
+  cfg:{nom:"Pharmacie Keur Garab",adr:"Médina, Dakar",tel:"33 800 00 00",wa:"77 000 00 00",heure:"07:30",ticket:"Merci de votre visite. Bonne santé !",
+    alertJ:90,secu:4,couv:14,recepMois:6,tp:80,pays:{"Espèces":true,"Wave":true,"Orange Money":true,"Free Money":false,"Assurance":true}},
+  setTab:"pharmacie",remise:0,view:"accueil",cart:[],pay:"Espèces",q:"",fcat:"",fst:"",perTab:"perimes",couv:14,cmdQ:{},invCat:CATS[0],inv:{},
   sales:[],hist:Array.from({length:13},()=>Math.round((190+rng()*140)*1000)),
   orders:[{id:"BC-0412",f:"sod",date:"31/10/2026",st:"attente",lines:[{pid:20,q:20},{pid:4,q:10},{pid:19,q:8}]}],
   pertes:[],avoirs:[],perteOct:86400,paidUntil:"30/11/2026",invoices:[["Novembre 2026","Wave","28/10/2026"],["Octobre 2026","Orange Money","29/09/2026"],["Septembre 2026","Wave","30/08/2026"]],nextBC:413};
 
+const me=()=>S.users.find(u=>u.id===S.uid)||S.users[0];
+const isTit=()=>me().role==="titulaire";
+const can=k=>isTit()||!!(me().perm&&me().perm[k]);
+const short=u=>u.role==="titulaire"?"Dr "+u.nom.split(" ").pop():u.nom.split(" ")[0];
+const roleName=u=>u.role==="titulaire"?"Titulaire":(ROLES[u.role]||{}).n||u.role;
+const payModes=()=>Object.keys(S.cfg.pays).filter(k=>S.cfg.pays[k]);
 /* ---------- Calculs « pensés pharmacie » ---------- */
 const pd=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
 const dj=s=>Math.round((pd(s)-TODAY)/864e5);
@@ -332,7 +369,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 const live=p=>p.lots.filter(l=>l.q>0&&dj(l.exp)>=0).sort((a,b)=>a.exp<b.exp?-1:1);   // ordre FEFO
 const dead=p=>p.lots.filter(l=>l.q>0&&dj(l.exp)<0);
 const stock=p=>live(p).reduce((s,l)=>s+l.q,0);
-const seuil=p=>Math.ceil(p.vj*(FOUR[p.f].d+4));               // délai de livraison + 4 jours de sécurité
+const seuil=p=>p.seuilMan||Math.ceil(p.vj*(FOUR[p.f].d+S.cfg.secu));               // délai de livraison + 4 jours de sécurité
 const jours=p=>p.vj?Math.floor(stock(p)/p.vj):999;
 function etat(p){const s=stock(p);return s===0?["Rupture","bad"]:s<seuil(p)?["Sous le seuil","warn"]:["En stock","ok"]}
 function invendus(p){let c=0;return live(p).map(l=>{const cap=Math.max(0,Math.floor(p.vj*dj(l.exp))-c),sold=Math.min(l.q,cap);c+=sold;return{p,l,u:l.q-sold}}).filter(x=>x.u>0)}
@@ -355,7 +392,9 @@ function sortie(p,q){for(const l of live(p)){const t=Math.min(l.q,q);l.q-=t;q-=t
 /* ---------- Navigation ---------- */
 function navItems(){const per=perimes().length+sous(0,30).length,sg=sugList().length,rec=S.orders.filter(o=>o.st==="attente").length;
   const all=[["accueil","Tableau de bord"],["caisse","Caisse"],["scanner","Scanner"],["stock","Stock"],["peremption","Péremptions",per],["commandes","Commandes",sg+rec],["inventaire","Inventaire"],["abonnement","Abonnement"]];
-  return S.role==="vendeur"?all.filter(i=>["caisse","scanner","stock","peremption"].includes(i[0])):all}
+  all.splice(7,0,["parametres","Paramètres"]);
+  const ok={accueil:can("dash"),commandes:can("cmd")||can("recep"),inventaire:can("inv"),parametres:isTit(),abonnement:isTit()};
+  return all.filter(i=>ok[i[0]]!==false)}
 const ICO={accueil:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
   caisse:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h4M14 13h3M7 17h4M14 17h3"/>',
   scanner:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 16h3"/>',
@@ -363,21 +402,24 @@ const ICO={accueil:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="
   peremption:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
   commandes:'<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
   inventaire:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10l2 2 4-4M9 16h6"/>',
+  parametres:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   abonnement:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
   plus:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
 const svg=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
-const SHORT={accueil:"Accueil",caisse:"Caisse",scanner:"Scanner",stock:"Stock",peremption:"Péremptions",commandes:"Commandes",inventaire:"Inventaire",abonnement:"Abonnement"};
+const SHORT={accueil:"Accueil",caisse:"Caisse",scanner:"Scanner",stock:"Stock",peremption:"Péremptions",commandes:"Commandes",inventaire:"Inventaire",parametres:"Paramètres",abonnement:"Abonnement"};
 function nav(){const items=navItems();if(!items.some(i=>i[0]===S.view))S.view=items[0][0];
   document.getElementById("nav").innerHTML=items.map(([k,l,n])=>`<button data-go="${k}" ${S.view===k?'aria-current="page"':""}><span class="ico">${svg(k)}${l}</span>${n?`<span class="pill">${n}</span>`:""}</button>`).join("");
-  const main=S.role==="vendeur"?["caisse","scanner","stock","peremption"]:["accueil","caisse","scanner","stock"],rest=items.filter(i=>!main.includes(i[0])),restN=rest.reduce((a,i)=>a+(i[2]||0),0),
+  const main=can("dash")?["accueil","caisse","scanner","stock"]:["caisse","scanner","stock","peremption"],rest=items.filter(i=>!main.includes(i[0])),restN=rest.reduce((a,i)=>a+(i[2]||0),0),
     tb=document.getElementById("tabbar"),btn=k=>{const it=items.find(i=>i[0]===k);return k==="scanner"?`<button class="scan" data-go="scanner" ${S.view===k?'aria-current="page"':""}><span class="b">${svg(k)}</span><small>Scanner</small></button>`:
       `<button data-go="${k}" ${S.view===k?'aria-current="page"':""}>${svg(k)}<span>${SHORT[k]}</span>${it&&it[2]?`<span class="dot">${it[2]}</span>`:""}</button>`};
   tb.style.setProperty("--n",main.length+(rest.length?1:0));
   tb.innerHTML=main.map(btn).join("")+(rest.length?`<button data-act="more" ${rest.some(i=>i[0]===S.view)?'aria-current="page"':""}>${svg("plus")}<span>Plus</span>${restN?`<span class="dot">${restN}</span>`:""}</button>`:"");
-  document.getElementById("role").value=S.role;document.getElementById("mrole").value=S.role}
-function more(){const items=navItems(),main=["accueil","caisse","scanner","stock"];
+  const opts=S.users.filter(u=>u.actif).map(u=>`<option value="${u.id}" ${u.id===S.uid?"selected":""}>${esc(u.nom)} · ${roleName(u)}</option>`).join("");
+  document.getElementById("role").innerHTML=opts;document.getElementById("mrole").innerHTML=S.users.filter(u=>u.actif).map(u=>`<option value="${u.id}" ${u.id===S.uid?"selected":""}>${esc(short(u))}</option>`).join("");
+  document.querySelector(".side .foot").innerHTML=`${esc(S.cfg.nom)} (exemple)<br>Démo : rien n'est sauvegardé, envoyé ni payé.<br>Version 7`}
+function more(){const items=navItems(),main=can("dash")?["accueil","caisse","scanner","stock"]:["caisse","scanner","stock","peremption"];
   layer(`<div class="sheet" role="dialog" aria-modal="true" aria-label="Plus"><div class="grab"></div>${items.filter(i=>!main.includes(i[0])).map(([k,l,n])=>`<button class="it" data-go="${k}" ${S.view===k?'aria-current="page"':""}>${svg(k)}${l}${n?`<span class="pill">${n}</span>`:""}</button>`).join("")}
-  <p class="muted" style="font-size:.8rem;padding:8px 10px">Pharmacie Keur Garab (exemple) · démo, rien n'est sauvegardé ni payé.</p></div>`)}
+  <p class="muted" style="font-size:.8rem;padding:8px 10px">${esc(S.cfg.nom)} (exemple) · connecté : ${esc(me().nom)} (${roleName(me())}) · démo, rien n'est sauvegardé ni payé.</p></div>`)}
 function cards(root){(root||document).querySelectorAll(".tw table").forEach(t=>{t.classList.add("cards");const h=[...t.querySelectorAll("thead th")].map(x=>x.textContent.trim());
   t.querySelectorAll("tbody tr,tfoot tr").forEach(tr=>{let i=0;[...tr.children].forEach(td=>{if(!td.hasAttribute("data-l"))td.setAttribute("data-l",td.colSpan>1?"":(h[i]||""));i+=td.colSpan||1})})})}
 function toast(t){document.querySelectorAll(".toast").forEach(x=>x.remove());const el=document.createElement("div");el.className="toast";el.setAttribute("role","status");el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),3400)}
@@ -391,7 +433,7 @@ const bubble=(t,h="07:30",cls="")=>`<div class="bubble ${cls}">${esc(t)}<span cl
 
 /* ---------- Vues ---------- */
 const V={};
-V.accueil=()=>{const per=perimes(),s30=sous(0,30),s90=sous(0,90),risk=s90.reduce((s,x)=>s+x.l.q*x.p.pa,0),rup=P.filter(p=>stock(p)===0),bas=P.filter(p=>etat(p)[1]==="warn"),sg=sugList(),
+V.accueil=()=>{const per=perimes(),s30=sous(0,30),s90=sous(0,S.cfg.alertJ),risk=s90.reduce((s,x)=>s+x.l.q*x.p.pa,0),rup=P.filter(p=>stock(p)===0),bas=P.filter(p=>etat(p)[1]==="warn"),sg=sugList(),
   inv=P.flatMap(invendus),invVal=inv.reduce((s,x)=>s+x.u*x.p.pa,0),pertes=S.pertes.reduce((s,x)=>s+x.v,0),av=S.avoirs.reduce((s,x)=>s+x.v,0),
   days=[...S.hist,ventesJour()],mx=Math.max(...days),att=S.orders.filter(o=>o.st==="attente");
   const todo=[];
@@ -401,19 +443,19 @@ V.accueil=()=>{const per=perimes(),s30=sous(0,30),s90=sous(0,90),risk=s90.reduce
   if(sg.length)todo.push(["warn",sg.length,`Commander ${sg.length} produit${sg.length>1?"s":""}`,Object.keys(FOUR).filter(f=>sg.some(p=>p.f===f)).map(f=>FOUR[f].n).join(", ")+" · quantités déjà calculées","commandes"]);
   if(att.length)todo.push(["ok","↓",`Réceptionner ${att.length} livraison${att.length>1?"s":""}`,att.map(o=>FOUR[o.f].n+" ("+o.id+")").join(", "),"commandes"]);
   if(inv.length)todo.push(["warn","~",`${inv.length} lot${inv.length>1?"s":""} ne ser${inv.length>1?"ont":"a"} pas vendu${inv.length>1?"s":""} à temps`,`Au rythme actuel, ${fmt(invVal)} finiront à la poubelle`,"peremption","inv"]);
-  return head("Bonjour Dr Ndiaye",`Pharmacie Keur Garab · ${TODAY_TXT}`,`<button class="btn pri" data-go="caisse">Nouvelle vente</button>`)+
+  return head("Bonjour "+esc(short(me())),`${esc(S.cfg.nom)} · ${TODAY_TXT}`,`<button class="btn pri" data-go="caisse">Nouvelle vente</button>`)+
   `<div class="kpis">
     <button class="kpi" data-go="caisse"><span>Ventes du jour</span><b class="num">${fmt(ventesJour())}</b><em>${S.sales.length} tickets</em></button>
     <button class="kpi" data-go="stock"><span>Valeur du stock</span><b class="num">${fmt(valStock())}</b><em>${P.length} références · prix d'achat</em></button>
-    <button class="kpi ${per.length?"alert":""}" data-go="peremption"><span>À périmer sous 90 j</span><b class="num">${fmt(risk)}</b><em>${s90.length} lots · ${per.length} déjà périmés</em></button>
+    <button class="kpi ${per.length?"alert":""}" data-go="peremption"><span>À périmer sous ${S.cfg.alertJ} j</span><b class="num">${fmt(risk)}</b><em>${s90.length} lots · ${per.length} déjà périmés</em></button>
     <button class="kpi" data-go="commandes"><span>Ruptures · seuil bas</span><b class="num">${rup.length} · ${bas.length}</b><em>${sg.length} produit${sg.length>1?"s":""} à commander</em></button>
   </div>
   <div class="grid2">
     <section class="panel"><header><div><h2>À faire aujourd'hui</h2><p>Garab regarde tout le stock chaque matin et vous dit quoi faire.</p></div></header>
       <div class="list">${todo.map(([c,i,t,s,v,tab])=>`<div class="li"><span class="ic ${c}">${i}</span><div class="grow"><b>${t}</b><small>${esc(s)}</small></div><button class="btn sm" data-go="${v}" ${tab?`data-tab="${tab}"`:""}>Voir</button></div>`).join("")||'<p class="empty">Rien d\'urgent. Bonne journée !</p>'}</div>
     </section>
-    <section class="panel"><header><div><h2>Résumé reçu sur WhatsApp</h2><p>Chaque matin à 7 h 30, sur le téléphone du titulaire.</p></div></header>
-      <div class="wa-wrap">${bubble(resume(),"07:30","in")}</div>
+    <section class="panel"><header><div><h2>Résumé reçu sur WhatsApp</h2><p>Chaque matin à ${S.cfg.heure.replace(":"," h ")}, au ${esc(S.cfg.wa)}.</p></div></header>
+      <div class="wa-wrap">${bubble(resume(),S.cfg.heure,"in")}</div>
     </section>
   </div>
   <div class="grid2">
@@ -426,14 +468,15 @@ V.accueil=()=>{const per=perimes(),s30=sous(0,30),s90=sous(0,90),risk=s90.reduce
         <div class="li"><span>Jeté en octobre</span><b class="num" style="color:var(--bad)">${fmt(S.perteOct)}</b></div>
         <div class="li"><span>Jeté en novembre</span><b class="num">${fmt(pertes)}</b></div>
         <div class="li"><span>Récupéré en avoirs grossiste</span><b class="num" style="color:var(--ok)">${fmt(av)}</b></div>
-        <div class="li"><span>Encore récupérable (lots &lt; 90 j)</span><b class="num">${fmt(risk)}</b></div>
+        <div class="li"><span>Encore récupérable (lots &lt; ${S.cfg.alertJ} j)</span><b class="num">${fmt(risk)}</b></div>
       </div>
       <p class="note-box">Un lot signalé 3 mois avant sa date peut encore être vendu en priorité ou rendu au grossiste. Un lot découvert périmé est perdu.</p>
     </section>
   </div>`};
 function resume(){const per=perimes(),s30=sous(0,30),rup=P.filter(p=>stock(p)===0),sg=sugList();
-  return `Garab · Pharmacie Keur Garab
-Bonjour Dr Ndiaye. Hier : ${fmt(S.hist[12])} de ventes.
+  const t=S.users.find(u=>u.role==="titulaire");
+  return `Garab · ${S.cfg.nom}
+Bonjour ${short(t)}. Hier : ${fmt(S.hist[12])} de ventes.
 
 ⚠️ ${per.length} lot${per.length>1?"s":""} périmé${per.length>1?"s":""} à retirer
 ⏳ ${s30.length} lot${s30.length>1?"s":""} expire${s30.length>1?"nt":""} sous 30 jours${s30[0]?` (dont ${s30[0].p.nom}, ${s30[0].l.q} boîtes, le ${dfr(s30[0].l.exp)})`:""}
@@ -453,71 +496,77 @@ V.caisse=()=>{const top=[1,24,6,9,2,18,16,26];
     <section class="panel ticket" id="ticket" aria-label="Ticket en cours"><header><h2>Ticket</h2>${S.cart.length?'<button class="btn sm" data-act="vider">Vider</button>':""}</header>${ticket()}</section>
   </div>
   <section class="panel"><header><div><h2>Tickets du jour</h2><p>${S.sales.length} ventes · ${fmt(ventesJour())}</p></div></header>
-    <div class="tw"><table><thead><tr><th>Heure</th><th>Produits</th><th>Paiement</th><th class="r">Montant</th></tr></thead><tbody>
-    ${S.sales.slice().reverse().map(v=>`<tr><td class="num">${v.h}</td><td>${v.items.map(i=>i.q+" × "+byId(i.pid).nom).join(", ")}</td><td><span class="st n">${v.mode}</span></td><td class="r num">${fmt(v.tot)}</td></tr>`).join("")}
-    </tbody></table></div></section>`+(S.cart.length?`<div class="cartbar"><div><small>${S.cart.reduce((a,c)=>a+c.q,0)} article${S.cart.reduce((a,c)=>a+c.q,0)>1?"s":""}</small><br><b class="num">${fmt(S.cart.reduce((s,c)=>s+c.q*byId(c.pid).pv,0))}</b></div><button class="btn" data-act="toticket">Voir le ticket · encaisser</button></div>`:"")};
+    <div class="tw"><table><thead><tr><th>Heure</th><th>Produits</th><th>Vendeur</th><th>Paiement</th><th class="r">Montant</th></tr></thead><tbody>
+    ${S.sales.slice().reverse().map(v=>`<tr><td class="num">${v.h}</td><td>${v.items.map(i=>i.q+" × "+(byId(i.pid)||{nom:"Produit supprimé"}).nom).join(", ")}${v.rem?` <span class="st acc">−${v.rem} %</span>`:""}</td><td>${esc(v.par||"Dr Ndiaye")}</td><td><span class="st n">${v.mode}</span></td><td class="r num">${fmt(v.tot)}</td></tr>`).join("")}
+    </tbody></table></div></section>`+(S.cart.length?`<div class="cartbar"><div><small>${S.cart.reduce((a,c)=>a+c.q,0)} article${S.cart.reduce((a,c)=>a+c.q,0)>1?"s":""}</small><br><b class="num">${fmt(net())}</b></div><button class="btn" data-act="toticket">Voir le ticket · encaisser</button></div>`:"")};
+const brut=()=>S.cart.reduce((s,c)=>s+c.q*byId(c.pid).pv,0);
+const net=()=>Math.round(brut()*(1-S.remise/100));
 function ticket(){if(!S.cart.length)return '<p class="empty">Ajoutez des produits depuis la recherche ou les ventes fréquentes.</p>';
-  const tot=S.cart.reduce((s,c)=>s+c.q*byId(c.pid).pv,0),ass=S.pay==="Assurance";
+  if(!payModes().includes(S.pay))S.pay=payModes()[0];
+  const tot=net(),ass=S.pay==="Assurance",tp=S.cfg.tp/100;
   return S.cart.map(c=>{const p=byId(c.pid),l=live(p)[0];return `<div class="tl"><div><b>${p.nom}</b><small>${p.pres} · lot <span class="lot">${l?l.n:"—"}</span>${l?" · exp. "+dfr(l.exp):""}</small></div>
     <div class="qty"><button data-q="${c.pid}|-1" aria-label="Moins">−</button><span class="num">${c.q}</span><button data-q="${c.pid}|1" aria-label="Plus">+</button></div><b class="num">${fmt(c.q*p.pv)}</b></div>`}).join("")+
+  (can("remise")?`<div class="row"><span class="lbl">Remise</span><div class="seg" role="group" aria-label="Remise">${[0,5,10].map(r=>`<button data-rem="${r}" aria-pressed="${S.remise===r}">${r} %</button>`).join("")}</div>${S.remise?`<span class="muted">− ${fmt(brut()-tot)}</span>`:""}</div>`:"")+
   `<div class="total"><span>Total</span><b class="num">${fmt(tot)}</b></div>
-   ${ass?`<div class="note-box">Tiers payant (IPM / mutuelle) : part assurance 80 % = <b class="num">${fmt(tot*.8)}</b>. Le patient paie <b class="num">${fmt(tot*.2)}</b>.</div>`:""}
-   <div class="methods" role="group" aria-label="Moyen de paiement">${["Espèces","Wave","Orange Money","Assurance"].map(m=>`<button data-pay="${m}" aria-pressed="${S.pay===m}">${m}</button>`).join("")}</div>
-   <button class="btn pri" data-act="encaisser" style="padding:12px">Encaisser ${fmt(ass?tot*.2:tot)}</button>`}
+   ${ass?`<div class="note-box">Tiers payant (IPM / mutuelle / CMU) : part assurance ${S.cfg.tp} % = <b class="num">${fmt(tot*tp)}</b>. Le patient paie <b class="num">${fmt(tot*(1-tp))}</b>.</div>`:""}
+   <div class="methods" role="group" aria-label="Moyen de paiement">${payModes().map(m=>`<button data-pay="${m}" aria-pressed="${S.pay===m}">${m}</button>`).join("")}</div>
+   <button class="btn pri" data-act="encaisser" style="padding:12px">Encaisser ${fmt(ass?tot*(1-tp):tot)}</button>
+   <p class="muted" style="font-size:.8rem;text-align:center">Vendeur : ${esc(me().nom)} · ticket « ${esc(S.cfg.ticket)} »</p>`}
 function fillRes(){const q=S.q.trim().toLowerCase(),el=document.getElementById("res");if(!el)return;
   const list=(q?P.filter(p=>(p.nom+" "+p.pres).toLowerCase().includes(q)):P.slice().sort((a,b)=>b.vj-a.vj)).slice(0,8);
   el.innerHTML=list.map(p=>{const s=stock(p),l=live(p)[0],d=dead(p).length,inCart=(S.cart.find(c=>c.pid===p.id)||{}).q||0;
-    const tags=(l&&(l.prio||dj(l.exp)<90)?` <span class="st acc">À vendre en priorité</span>`:"")+(d?` <span class="st bad">${d} lot périmé bloqué</span>`:"");
+    const tags=(l&&(l.prio||dj(l.exp)<S.cfg.alertJ)?` <span class="st acc">À vendre en priorité</span>`:"")+(d?` <span class="st bad">${d} lot périmé bloqué</span>`:"");
     return `<tr><td><b>${p.nom}</b>${tags}<small>${p.pres}${l?` · lot ${l.n}, exp. ${dfr(l.exp)}`:""}</small></td><td class="r num">${s}</td><td class="r num">${fmt(p.pv)}</td>
     <td class="r">${s>inCart?`<button class="btn sm" data-add="${p.id}">Ajouter</button>`:`<span class="st bad">${s?"Plus de stock":"Rupture"}</span>`}</td></tr>`}).join("")||`<tr><td colspan="4" class="empty">Aucun produit pour « ${esc(S.q)} ».</td></tr>`;cards(el.closest(".tw").parentNode)}
 function addCart(pid,silent){const p=byId(pid),c=S.cart.find(x=>x.pid===p.id),q=c?c.q:0;if(q>=stock(p)){toast(stock(p)?`Plus que ${stock(p)} en stock.`:`${p.nom} : rupture de stock.`);return false}
   c?c.q++:S.cart.push({pid:p.id,q:1});if(silent){nav();return true}render(true)}
-function encaisser(){const tot=S.cart.reduce((s,c)=>s+c.q*byId(c.pid).pv,0),now=new Date(),h=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+function encaisser(){const tot=net(),now=new Date(),h=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
   const low=[];S.cart.forEach(c=>{const p=byId(c.pid);sortie(p,c.q);if(etat(p)[1]!=="ok")low.push(p.nom)});
-  S.sales.push({h,items:S.cart.map(c=>({pid:c.pid,q:c.q,pv:byId(c.pid).pv})),tot,mode:S.pay});S.cart=[];S.q="";render();
+  S.sales.push({h,items:S.cart.map(c=>({pid:c.pid,q:c.q,pv:byId(c.pid).pv})),tot,mode:S.pay,par:me().nom.split(" ").slice(-2).join(" "),rem:S.remise});S.cart=[];S.remise=0;S.q="";render();
   toast(`Vente enregistrée : ${fmt(tot)} (${S.sales[S.sales.length-1].mode}).`+(low.length?` Stock bas : ${low.join(", ")}. Ajouté aux commandes.`:""))}
 
 V.stock=()=>head("Stock",`${P.length} références dans la démo (une vraie officine en a 2 000 à 4 000). Cliquez sur un produit pour voir ses lots.`,
-  S.role==="titulaire"?`<button class="btn" data-act="import">Importer mon stock (Excel)</button>`:"")+
+  can("prod")?`<button class="btn" data-act="import">Importer (Excel)</button><button class="btn pri" data-act="newprod">Nouveau produit</button>`:"")+
   `<section class="panel"><div class="row">
     <input type="search" id="sq" placeholder="Rechercher" value="${esc(S.q)}" style="flex:1;min-width:180px" aria-label="Rechercher dans le stock">
     <select id="scat" aria-label="Rayon"><option value="">Tous les rayons</option>${CATS.map(c=>`<option ${S.fcat===c?"selected":""}>${c}</option>`).join("")}</select>
-    <select id="sst" aria-label="État"><option value="">Tous les états</option>${[["bad","Rupture"],["warn","Sous le seuil"],["exp","Lot à périmer < 90 j"]].map(([v,l])=>`<option value="${v}" ${S.fst===v?"selected":""}>${l}</option>`).join("")}</select>
+    <select id="sst" aria-label="État"><option value="">Tous les états</option>${[["bad","Rupture"],["warn","Sous le seuil"],["exp","Lot à périmer < "+S.cfg.alertJ+" j"]].map(([v,l])=>`<option value="${v}" ${S.fst===v?"selected":""}>${l}</option>`).join("")}</select>
   </div>
   <div class="tw"><table><thead><tr><th>Produit</th><th>Rayon</th><th class="r">Stock</th><th class="r">Jours</th><th>Prochaine péremption</th><th>État</th></tr></thead><tbody id="stb"></tbody></table></div></section>`;
 function fillStock(){const q=S.q.trim().toLowerCase(),el=document.getElementById("stb");if(!el)return;
-  const list=P.filter(p=>(!q||(p.nom+" "+p.pres).toLowerCase().includes(q))&&(!S.fcat||p.cat===S.fcat)&&(!S.fst||(S.fst==="exp"?p.lots.some(l=>l.q&&dj(l.exp)<90):etat(p)[1]===S.fst)));
+  const list=P.filter(p=>(!q||(p.nom+" "+p.pres).toLowerCase().includes(q))&&(!S.fcat||p.cat===S.fcat)&&(!S.fst||(S.fst==="exp"?p.lots.some(l=>l.q&&dj(l.exp)<S.cfg.alertJ):etat(p)[1]===S.fst)));
   el.innerHTML=list.map(p=>{const[e,c]=etat(p),n=p.lots.filter(l=>l.q).sort((a,b)=>a.exp<b.exp?-1:1)[0],d=n?dj(n.exp):null;
     return `<tr class="click" data-prod="${p.id}" tabindex="0"><td><b>${p.nom}</b><small>${p.pres}</small></td><td>${p.cat}</td><td class="r num">${stock(p)}</td><td class="r num">${stock(p)?jours(p):"—"}</td>
-    <td>${n?`<span class="num">${dfr(n.exp)}</span> ${d<0?'<span class="st bad">Périmé</span>':d<30?`<span class="st bad">${d} j</span>`:d<90?`<span class="st warn">${d} j</span>`:""}`:"—"}</td><td><span class="st ${c}">${e}</span></td></tr>`}).join("")||'<tr><td colspan="6" class="empty">Aucun produit.</td></tr>';cards(el.closest(".tw").parentNode)}
+    <td>${n?`<span class="num">${dfr(n.exp)}</span> ${d<0?'<span class="st bad">Périmé</span>':d<30?`<span class="st bad">${d} j</span>`:d<S.cfg.alertJ?`<span class="st warn">${d} j</span>`:""}`:"—"}</td><td><span class="st ${c}">${e}</span></td></tr>`}).join("")||'<tr><td colspan="6" class="empty">Aucun produit.</td></tr>';cards(el.closest(".tw").parentNode)}
 function fiche(id){const p=byId(id),[e,c]=etat(p),inv=invendus(p),sg=sugg(p);
   layer(`<div class="drawer" role="dialog" aria-modal="true" aria-label="${p.nom}"><div class="top"><div><h2>${p.nom}</h2><p>${p.pres} · ${p.cat}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
   <div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))">
     <div class="kpi"><span>Stock vendable</span><b class="num">${stock(p)}</b><em><span class="st ${c}">${e}</span> seuil : ${seuil(p)}</em></div>
     <div class="kpi"><span>Ventes moyennes</span><b class="num">${nb(p.vj)} / jour</b><em>${stock(p)?"Tient environ "+jours(p)+" jours":"Plus rien en rayon"}</em></div>
-    <div class="kpi"><span>Prix de vente</span><b class="num">${fmt(p.pv)}</b><em>Marge ${Math.round((p.pv-p.pa)/p.pv*100)} %${S.role==="titulaire"?" · achat "+fmt(p.pa):""}</em></div>
+    <div class="kpi"><span>Prix de vente</span><b class="num">${fmt(p.pv)}</b><em>${can("achat")?`Marge ${Math.round((p.pv-p.pa)/p.pv*100)} % · achat ${fmt(p.pa)}`:""}</em></div>
     <div class="kpi"><span>Fournisseur</span><b>${FOUR[p.f].n}</b><em>Livré en ${FOUR[p.f].d} j${enCommande(p.id)?` · ${enCommande(p.id)} en commande`:""}</em></div>
   </div>
   <section class="panel"><header><h3>Lots en stock</h3><p>Ordre de sortie : le plus proche de sa date d'abord</p></header>
   <div class="tw"><table><thead><tr><th>Lot</th><th>Péremption</th><th class="r">Qté</th><th>État</th></tr></thead><tbody>
-  ${p.lots.filter(l=>l.q).sort((a,b)=>a.exp<b.exp?-1:1).map(l=>{const d=dj(l.exp),u=inv.find(x=>x.l===l);return `<tr><td class="lot">${l.n}</td><td class="num">${dfr(l.exp)}</td><td class="r num">${l.q}</td><td>${d<0?'<span class="st bad">Périmé · bloqué</span>':d<30?`<span class="st bad">Dans ${d} j</span>`:d<90?`<span class="st warn">Dans ${d} j</span>`:'<span class="st ok">OK</span>'}${u?` <span class="st acc">${u.u} invendables</span>`:""}</td></tr>`}).join("")||'<tr><td colspan="4" class="empty">Aucun lot en stock.</td></tr>'}
+  ${p.lots.filter(l=>l.q).sort((a,b)=>a.exp<b.exp?-1:1).map(l=>{const d=dj(l.exp),u=inv.find(x=>x.l===l);return `<tr><td class="lot">${l.n}</td><td class="num">${dfr(l.exp)}</td><td class="r num">${l.q}</td><td>${d<0?'<span class="st bad">Périmé · bloqué</span>':d<30?`<span class="st bad">Dans ${d} j</span>`:d<S.cfg.alertJ?`<span class="st warn">Dans ${d} j</span>`:'<span class="st ok">OK</span>'}${u?` <span class="st acc">${u.u} invendables</span>`:""}</td></tr>`}).join("")||'<tr><td colspan="4" class="empty">Aucun lot en stock.</td></tr>'}
   </tbody></table></div></section>
   ${inv.length?`<p class="note-box">Au rythme de ${nb(p.vj)} par jour, <b>${inv.reduce((s,x)=>s+x.u,0)} boîtes</b> ne seront pas vendues avant leur date. Mettez-les en avant au comptoir ou rendez-les au grossiste.</p>`:""}
-  ${S.role==="titulaire"?`<div class="row">${sg?`<button class="btn pri" data-go="commandes">Commander ${sg} (suggestion)</button>`:'<span class="muted">Stock suffisant, pas de commande conseillée.</span>'}</div>`:""}
+  ${can("prod")?`<div class="row"><button class="btn" data-editprod="${p.id}">Modifier le produit</button></div>`:""}
+  ${can("cmd")?`<div class="row">${sg?`<button class="btn pri" data-go="commandes">Commander ${sg} (suggestion)</button>`:'<span class="muted">Stock suffisant, pas de commande conseillée.</span>'}</div>`:""}
   </div>`)}
 
-V.peremption=()=>{const tabs=[["perimes","Périmés",perimes()],["30","Moins de 30 jours",sous(0,30)],["90","30 à 90 jours",sous(30,90)],["inv","Invendables prévus",P.flatMap(invendus)]],cur=tabs.find(t=>t[0]===S.perTab),rows=cur[2];
+V.peremption=()=>{const tabs=[["perimes","Périmés",perimes()],["30","Moins de 30 jours",sous(0,30)],["90","30 à "+S.cfg.alertJ+" jours",sous(30,S.cfg.alertJ)],["inv","Invendables prévus",P.flatMap(invendus)]],cur=tabs.find(t=>t[0]===S.perTab),rows=cur[2];
   const val=rows.reduce((s,x)=>s+(S.perTab==="inv"?x.u:x.l.q)*x.p.pa,0);
   const intro={perimes:"Ces lots sont bloqués à la caisse. Retirez-les des rayons et mettez-les en destruction.",30:"Dernière chance : retour au grossiste ou vente en priorité au comptoir.",90:"Il est encore temps de les écouler normalement. Garab les propose en premier à la caisse.",inv:"Garab compare le stock de chaque lot au rythme des ventes : voici ce qui restera sur les étagères à la date de péremption si rien ne change."}[S.perTab];
-  return head("Péremptions","Chaque lot est suivi avec sa date. Les alertes partent 90 jours avant.")+
+  return head("Péremptions","Chaque lot est suivi avec sa date. Les alertes partent ${S.cfg.alertJ} jours avant.")+
   `<div class="seg" role="group" aria-label="Horizon">${tabs.map(([k,l,r])=>`<button data-per="${k}" aria-pressed="${S.perTab===k}">${l} (${r.length})</button>`).join("")}</div>
   <section class="panel"><header><div><h2>${cur[1]}</h2><p>${intro}</p></div><b class="num">${fmt(val)}</b></header>
   <div class="tw"><table><thead><tr><th>Produit</th><th>Lot</th><th>Péremption</th><th class="r">${S.perTab==="inv"?"Invendables":"Qté"}</th><th class="r">Valeur</th><th></th></tr></thead><tbody>
   ${rows.map(x=>{const d=dj(x.l.exp),q=S.perTab==="inv"?x.u:x.l.q,k=x.p.id+"|"+x.l.n,ret=FOUR[x.p.f].ret;
     return `<tr><td><b>${x.p.nom}</b><small>${x.p.pres} · ${FOUR[x.p.f].n}</small></td><td class="lot">${x.l.n}</td><td><span class="num">${dfr(x.l.exp)}</span><small>${d<0?"il y a "+(-d)+" j":"dans "+d+" j"}</small></td>
     <td class="r num">${q}${S.perTab==="inv"?` <small>sur ${x.l.q}</small>`:""}</td><td class="r num">${fmt(q*x.p.pa)}</td>
-    <td class="r"><div class="row" style="justify-content:flex-end;gap:6px">${d<0?`<button class="btn sm bad" data-retire="${k}">Retirer du stock</button>`:
-      (S.role==="titulaire"?`<button class="btn sm" data-retour="${k}" ${ret?"":`disabled title="${FOUR[x.p.f].n} ne reprend pas les produits"`}>Retour grossiste</button>`:"")+`<button class="btn sm" data-prio="${k}">${x.l.prio?"✓ En priorité":"Vendre en priorité"}</button>`}</div></td></tr>`}).join("")||'<tr><td colspan="6" class="empty">Aucun lot dans cette catégorie.</td></tr>'}
+    <td class="r"><div class="row" style="justify-content:flex-end;gap:6px">${d<0?(can("per")?`<button class="btn sm bad" data-retire="${k}">Retirer du stock</button>`:'<span class="muted">À signaler au pharmacien</span>'):
+      (can("per")?`<button class="btn sm" data-retour="${k}" ${ret?"":`disabled title="${FOUR[x.p.f].n} ne reprend pas les produits"`}>Retour grossiste</button>`:"")+`<button class="btn sm" data-prio="${k}">${x.l.prio?"✓ En priorité":"Vendre en priorité"}</button>`}</div></td></tr>`}).join("")||'<tr><td colspan="6" class="empty">Aucun lot dans cette catégorie.</td></tr>'}
   </tbody></table></div></section>`};
 function findLot(k){const[pid,n]=k.split("|"),p=byId(pid);return{p,l:p.lots.find(l=>l.n===n)}}
 
@@ -526,7 +575,7 @@ V.commandes=()=>{const att=S.orders.filter(o=>o.st==="attente"),sg=sugList(),fs=
   `<span class="lbl">Couvrir</span><div class="seg" role="group" aria-label="Couverture">${[7,14,30].map(n=>`<button data-couv="${n}" aria-pressed="${S.couv===n}">${n} jours</button>`).join("")}</div>`)+
   (att.length?`<section class="panel"><header><div><h2>Livraisons attendues</h2><p>Saisissez les lots et dates à la réception : les alertes de péremption en dépendent.</p></div></header>
    <div class="list">${att.map(o=>`<div class="li"><div class="grow"><b>${FOUR[o.f].n} · ${o.id}</b><small>Commandé le ${o.date} · ${o.lines.map(l=>l.q+" × "+byId(l.pid).nom).join(", ")}</small></div><button class="btn pri sm" data-recv="${o.id}">Réceptionner</button></div>`).join("")}</div></section>`:"")+
-  (fs.length?fs.map(f=>{const items=sg.filter(p=>p.f===f),tot=items.reduce((s,p)=>s+qCmd(p)*p.pa,0);
+  (!can("cmd")?"":fs.length?fs.map(f=>{const items=sg.filter(p=>p.f===f),tot=items.reduce((s,p)=>s+qCmd(p)*p.pa,0);
     return `<section class="panel"><header><div><h2>${FOUR[f].n}</h2><p>Livré en ${FOUR[f].d} jour${FOUR[f].d>1?"s":""} · ${items.length} produit${items.length>1?"s":""}</p></div><div class="row"><b class="num">${fmt(tot)}</b><button class="btn wa" data-send="${f}">Envoyer le bon de commande</button></div></header>
     <div class="tw"><table><thead><tr><th>Produit</th><th>Pourquoi</th><th class="r">Prix achat</th><th class="r">Quantité</th></tr></thead><tbody>
     ${items.map(p=>`<tr><td><b>${p.nom}</b><small>${p.pres}</small></td><td><small style="color:var(--fg)">Vend ${nb(p.vj)}/jour · reste ${stock(p)}${stock(p)?` (${jours(p)} j)`:" · <b style='color:var(--bad)'>rupture</b>"}${enCommande(p.id)?` · ${enCommande(p.id)} déjà en route`:""}</small><small>Suggestion : ${sugg(p)} pour ${S.couv} jours</small></td>
@@ -535,7 +584,7 @@ V.commandes=()=>{const att=S.orders.filter(o=>o.st==="attente"),sg=sugList(),fs=
   `<p class="note-box">Les produits qui risquent de périmer en rayon (voir « Invendables prévus ») ne sont jamais suggérés : commander moins, c'est jeter moins.</p>`};
 function bon(f){const items=sugList().filter(p=>p.f===f&&qCmd(p)>0);
   return `Bon de commande BC-0${S.nextBC}
-Pharmacie Keur Garab · ${dfr("2026-11-01")}
+${S.cfg.nom} · ${dfr("2026-11-03")}
 
 `+items.map(p=>`• ${qCmd(p)} × ${p.nom} (${p.pres})`).join("\n")+`
 
@@ -556,8 +605,8 @@ function recevoir(id){const o=S.orders.find(x=>x.id===id),def=f=>FOUR[f].n==="So
   </tbody></table></div>
   <p class="note-box" id="rwarn"></p>
   <div class="row"><button class="btn pri" data-recok="${o.id}">Valider la réception</button><button class="btn" data-close="1">Annuler</button></div></div>`,true);rwarn(o)}
-function rwarn(o){const el=document.getElementById("rwarn");if(!el)return;const c=o.lines.map((l,i)=>[byId(l.pid),document.getElementById("re"+i).value]).filter(([p,e])=>e&&dj(e)<180);
-  el.innerHTML=c.length?`⚠️ Péremption courte (moins de 6 mois) : <b>${c.map(([p,e])=>p.nom+" ("+dfr(e)+")").join(", ")}</b>. Vous pouvez refuser ces lots ou négocier un retour.`:"Toutes les dates sont à plus de 6 mois. ✓"}
+function rwarn(o){const el=document.getElementById("rwarn");if(!el)return;const c=o.lines.map((l,i)=>[byId(l.pid),document.getElementById("re"+i).value]).filter(([p,e])=>e&&dj(e)<S.cfg.recepMois*30);
+  el.innerHTML=c.length?`⚠️ Péremption courte (moins de ${S.cfg.recepMois} mois) : <b>${c.map(([p,e])=>p.nom+" ("+dfr(e)+")").join(", ")}</b>. Vous pouvez refuser ces lots ou négocier un retour.`:"Toutes les dates sont à plus de ${S.cfg.recepMois} mois. ✓"}
 function valRecep(id){const o=S.orders.find(x=>x.id===id);let n=0;
   o.lines.forEach((l,i)=>{const q=+document.getElementById("rq"+i).value||0,lot=document.getElementById("rl"+i).value.trim()||"SANS-LOT",e=document.getElementById("re"+i).value||"2028-01-01";if(q>0){byId(l.pid).lots.push({n:lot,exp:e,q,prio:false});n+=q}});
   o.st="reçue";closeLayer();render();toast(`${n} boîtes entrées en stock, avec leurs lots et dates.`)}
@@ -656,7 +705,7 @@ function lire(raw,fmt){const r={raw,fmt:fmt||"",gtin:"",lot:"",exp:"",serie:""},
   r.p=findGtin(r.gtin);r.dup=!!(r.serie&&S.serials.has(r.gtin+"|"+r.serie));return r}
 function V_scanRes(){const r=S.cur,el=document.getElementById("scanres");if(!el)return;
   if(!r){el.innerHTML=`<p class="empty">Scannez une boîte : le produit, le lot et la date s'affichent ici.</p>`;el.className="panel";return}
-  const d=r.exp?dj(r.exp):null,bad=d!=null&&d<0,warn=d!=null&&d>=0&&d<180,m=S.scanMode;
+  const d=r.exp?dj(r.exp):null,bad=d!=null&&d<0,warn=d!=null&&d>=0&&d<S.cfg.recepMois*30,m=S.scanMode;
   const lotEnStock=r.p&&r.lot?r.p.lots.find(l=>l.n===r.lot&&l.q>0):null;
   const msgs=[];
   if(r.dup)msgs.push(["bad",`Cette boîte (n° de série ${esc(r.serie)}) a déjà été scannée. Double saisie, ou boîte suspecte (contrefaçon) : vérifiez.`]);
@@ -777,6 +826,107 @@ function scanSell(){const r=S.cur,pid=r.p?r.p.id:+(document.getElementById("sp")
   if(addCart(p.id,true)){logScan(r,"Vendu","ok","ajouté au ticket");toast(`${p.nom} ajouté au ticket.`);S.cur=null;V_scanRes();resumeCam()}}
 function resumeCam(){if(S.cam)S.cam.paused=false}
 
+
+/* ---------- Changement d'utilisateur (code PIN) ---------- */
+function askPin(u){if(!u.pin){switchUser(u);return}
+  layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Code"><div class="top"><div><h2>${esc(u.nom)}</h2><p>${roleName(u)} · entrez votre code à 4 chiffres</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <input type="password" id="pin" class="pin" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Code PIN">
+  <p class="demo-band">Démo : le code de ${esc(u.nom.split(" ")[0])} est ${u.pin}.</p>
+  <div class="row"><button class="btn pri" data-pinok="${u.id}">Se connecter</button><button class="btn" data-close="1">Annuler</button></div></div>`,true);
+  setTimeout(()=>{const i=document.getElementById("pin");i&&i.focus()},50)}
+function switchUser(u){S.uid=u.id;S.role=isTit()?"titulaire":"vendeur";S.cart=[];S.remise=0;closeLayer();S.view=navItems()[0][0];render();
+  toast(`Connecté : ${u.nom} (${roleName(u)}).`+(isTit()?" Accès complet.":` Accès : ${navItems().map(i=>SHORT[i[0]]||i[1]).join(", ")}.`))}
+
+/* ---------- Produits : créer, modifier ---------- */
+function editProd(id){const p=id?byId(id):null,v=(k,d="")=>p?esc(p[k]):d;
+  layer(`<div class="drawer" role="dialog" aria-modal="true" aria-label="Produit"><div class="top"><div><h2>${p?"Modifier le produit":"Nouveau produit"}</h2><p>${p?esc(p.nom):"Ajoutez un produit au stock. Les lots s'ajoutent ensuite par le scanner ou la réception."}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <div class="form">
+    <div class="field full"><label for="pnom">Nom</label><input type="text" id="pnom" value="${v("nom")}" placeholder="ex. Paracétamol 1000 mg"></div>
+    <div class="field full"><label for="ppres">Présentation</label><input type="text" id="ppres" value="${v("pres")}" placeholder="ex. boîte de 8 cp"></div>
+    <div class="field"><label for="pcat">Rayon</label><select id="pcat">${CATS.map(c=>`<option ${p&&p.cat===c?"selected":""}>${esc(c)}</option>`).join("")}</select></div>
+    <div class="field"><label for="pfour">Grossiste</label><select id="pfour">${Object.entries(FOUR).map(([k,f])=>`<option value="${k}" ${p&&p.f===k?"selected":""}>${esc(f.n)}</option>`).join("")}</select></div>
+    <div class="field"><label for="ppv">Prix de vente (F)</label><input type="number" id="ppv" min="0" inputmode="numeric" value="${p?p.pv:""}"></div>
+    <div class="field"><label for="ppa">Prix d'achat (F)</label><input type="number" id="ppa" min="0" inputmode="numeric" value="${p?p.pa:""}"></div>
+    <div class="field"><label for="pseuil">Seuil d'alerte (boîtes)</label><input type="number" id="pseuil" min="0" inputmode="numeric" value="${p&&p.seuilMan?p.seuilMan:""}" placeholder="auto${p?" : "+Math.ceil(p.vj*(FOUR[p.f].d+S.cfg.secu)):""}"></div>
+    <div class="field"><label for="pcode">Code-barres / CIP</label><input type="text" id="pcode" inputmode="numeric" value="${p?esc((p.gtins[0]||p.gtin||"").replace(/^0/,"")):""}"></div>
+  </div>
+  <p class="note-box">Laissez le seuil vide : Garab le calcule tout seul à partir des ventes et du délai du grossiste.</p>
+  <div class="row"><button class="btn pri" data-saveprod="${p?p.id:0}">${p?"Enregistrer":"Créer le produit"}</button><button class="btn" data-close="1">Annuler</button>
+  ${p&&!p.lots.some(l=>l.q)?`<button class="btn bad" data-delprod="${p.id}">Supprimer</button>`:""}</div></div>`)}
+function saveProd(id){const g=k=>document.getElementById(k).value.trim(),nom=g("pnom"),pv=parseInt(g("ppv"))||0,pa=parseInt(g("ppa"))||0,se=parseInt(g("pseuil"))||0,code=g("pcode").replace(/\D/g,"");
+  if(!nom){toast("Indiquez le nom du produit.");return}if(!pv){toast("Indiquez le prix de vente.");return}
+  let p=id?byId(id):null;
+  if(!p){p={id:Math.max(...P.map(x=>x.id))+1,lots:[],vj:.5,gtin:"",gtins:[]};P.push(p)}
+  Object.assign(p,{nom,pres:g("ppres"),cat:document.getElementById("pcat").value,f:document.getElementById("pfour").value,pv,pa:pa||Math.round(pv/1.3),seuilMan:se||0});
+  if(code&&code.length>=8){const g14=code.padStart(14,"0");if(!findGtin(g14))p.gtins.unshift(g14)}
+  closeLayer();render(true);toast(id?`${nom} enregistré.`:`${nom} créé. Ajoutez ses lots avec le scanner (Entrée en stock).`)}
+
+/* ---------- Paramètres (titulaire) ---------- */
+const sw=(attr,on,label)=>`<label class="switch"><input type="checkbox" ${attr} ${on?"checked":""} aria-label="${esc(label)}"><span></span></label>`;
+V.parametres=()=>{const T=[["pharmacie","Pharmacie"],["equipe","Équipe"],["rayons","Rayons"],["grossistes","Grossistes"],["regles","Règles"]];
+  return head("Paramètres","Réservé au titulaire. Chaque réglage s'applique tout de suite à toute la pharmacie.")+
+  `<div class="seg" role="group" aria-label="Rubrique">${T.map(([k,l])=>`<button data-stab="${k}" aria-pressed="${S.setTab===k}">${l}</button>`).join("")}</div>`+SET[S.setTab]()};
+const SET={};
+SET.pharmacie=()=>{const c=S.cfg;return `<section class="panel"><header><div><h2>La pharmacie</h2><p>Ces informations apparaissent sur les tickets, les bons de commande et le résumé WhatsApp.</p></div></header>
+  <div class="form">
+    <div class="field full"><label for="cnom">Nom de la pharmacie</label><input type="text" id="cnom" value="${esc(c.nom)}"></div>
+    <div class="field full"><label for="cadr">Adresse</label><input type="text" id="cadr" value="${esc(c.adr)}"></div>
+    <div class="field"><label for="ctel">Téléphone</label><input type="tel" id="ctel" value="${esc(c.tel)}"></div>
+    <div class="field"><label for="cwa">WhatsApp du titulaire (résumé du matin)</label><input type="tel" id="cwa" value="${esc(c.wa)}"></div>
+    <div class="field"><label for="cheure">Heure du résumé WhatsApp</label><input type="text" id="cheure" value="${esc(c.heure)}" placeholder="07:30"></div>
+    <div class="field full"><label for="cticket">Message en bas des tickets</label><input type="text" id="cticket" value="${esc(c.ticket)}"></div>
+  </div>
+  <div class="row"><button class="btn pri" data-act="savepharma">Enregistrer</button></div></section>`};
+SET.equipe=()=>`<section class="panel"><header><div><h2>L'équipe</h2><p>Chacun a son code à 4 chiffres et ses droits. Les ventes sont enregistrées au nom de la personne connectée.</p></div><button class="btn pri" data-member="0">Ajouter un membre</button></header>
+  <div>${S.users.map(u=>`<div class="member ${u.actif?"":"off"}"><span class="av">${esc(u.nom.replace("Dr ","").split(" ").map(w=>w[0]).slice(0,2).join(""))}</span>
+    <div class="grow" style="flex:1;min-width:0"><b>${esc(u.nom)}</b>${u.id===S.uid?' <span class="st ok">connecté</span>':""}<small class="muted" style="display:block">${roleName(u)} · ${esc(u.tel)}${u.actif?"":" · désactivé"}</small>
+    ${u.role!=="titulaire"?`<small class="muted" style="display:block">${PERMS.filter(([k])=>u.perm[k]).map(x=>x[2]).join(" · ")||"Caisse, scanner et stock uniquement"}</small>`:'<small class="muted" style="display:block">Accès complet, paramètres et abonnement</small>'}</div>
+    ${u.role!=="titulaire"?`<div class="row" style="gap:6px"><button class="btn sm" data-member="${u.id}">Modifier</button><button class="btn sm" data-toggleuser="${u.id}">${u.actif?"Désactiver":"Réactiver"}</button></div>`:`<button class="btn sm" data-member="${u.id}">Modifier</button>`}</div>`).join("")}</div></section>
+  <p class="note-box">Caisse, scanner, stock et péremptions sont ouverts à tous. Le reste dépend des droits que vous donnez. Un vendeur qui part ? Désactivez-le : son historique de ventes est conservé.</p>`;
+function member(id){const u=id?S.users.find(x=>x.id===id):{nom:"",tel:"",role:"vendeur",pin:"",perm:permOf("vendeur"),actif:true},tit=u.role==="titulaire";
+  layer(`<div class="drawer" role="dialog" aria-modal="true" aria-label="Membre"><div class="top"><div><h2>${id?"Modifier "+esc(u.nom):"Nouveau membre"}</h2><p>${tit?"Titulaire : accès complet.":"Choisissez un rôle, puis ajustez les droits si besoin."}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <div class="form">
+    <div class="field full"><label for="unom">Nom complet</label><input type="text" id="unom" value="${esc(u.nom)}" placeholder="ex. Awa Ba"></div>
+    <div class="field"><label for="utel">Téléphone (WhatsApp)</label><input type="tel" id="utel" value="${esc(u.tel)}" placeholder="77 …"></div>
+    <div class="field"><label for="upin">Code à 4 chiffres</label><input type="text" id="upin" inputmode="numeric" maxlength="4" value="${esc(u.pin)}" placeholder="${tit?"facultatif":"ex. 1234"}"></div>
+    ${tit?"":`<div class="field full"><label for="urole">Rôle</label><select id="urole">${Object.entries(ROLES).map(([k,r])=>`<option value="${k}" ${u.role===k?"selected":""}>${r.n}</option>`).join("")}</select></div>`}
+  </div>
+  ${tit?"":`<section class="panel"><header><h3>Droits</h3><p>Caisse, scanner, stock et péremptions : toujours ouverts.</p></header><div class="perms" id="uperms">${PERMS.map(([k,l])=>`<label><input type="checkbox" data-perm="${k}" ${u.perm[k]?"checked":""}> ${l}</label>`).join("")}</div></section>`}
+  <div class="row"><button class="btn pri" data-saveuser="${id||0}">${id?"Enregistrer":"Ajouter"}</button><button class="btn" data-close="1">Annuler</button></div></div>`)}
+function saveUser(id){const g=k=>(document.getElementById(k)||{value:""}).value.trim(),nom=g("unom"),pin=g("upin");
+  if(!nom){toast("Indiquez le nom.");return}if(pin&&!/^\d{4}$/.test(pin)){toast("Le code doit faire 4 chiffres.");return}
+  let u=id?S.users.find(x=>x.id===id):null;
+  if(!u){if(!pin){toast("Donnez-lui un code à 4 chiffres.");return}u={id:Math.max(...S.users.map(x=>x.id))+1,actif:true};S.users.push(u)}
+  Object.assign(u,{nom,tel:g("utel"),pin});
+  if(u.role!=="titulaire"||!id){u.role=g("urole")||u.role||"vendeur";u.perm=Object.fromEntries(PERMS.map(([k])=>[k,!!(document.querySelector(`[data-perm="${k}"]`)||{}).checked]))}
+  closeLayer();render(true);toast(id?`${nom} : modifications enregistrées.`:`${nom} ajouté. Son code lui est envoyé par WhatsApp (démo).`)}
+SET.rayons=()=>`<section class="panel"><header><div><h2>Les rayons</h2><p>Organisez le stock comme vos étagères. Ils servent aux filtres et à l'inventaire tournant.</p></div></header>
+  <div>${CATS.map((c,i)=>{const n=P.filter(p=>p.cat===c).length;return `<div class="set"><input type="text" data-cat="${i}" value="${esc(c)}" aria-label="Nom du rayon" style="flex:1;min-width:0"><span class="muted" style="white-space:nowrap">${n} produit${n>1?"s":""}</span><button class="btn sm bad" data-delcat="${i}" aria-label="Supprimer ${esc(c)}">Supprimer</button></div>`}).join("")}</div>
+  <div class="row"><input type="text" id="newcat" placeholder="Nouveau rayon, ex. Dermatologie" style="flex:1 1 220px"><button class="btn pri" data-act="addcat">Ajouter le rayon</button></div></section>
+  <p class="note-box">Pour renommer, modifiez le nom puis touchez ailleurs : tous les produits suivent. Un rayon qui contient des produits peut être supprimé : vous choisissez où les déplacer.</p>`;
+function delCat(i){const c=CATS[i],n=P.filter(p=>p.cat===c).length;if(CATS.length<2){toast("Il faut garder au moins un rayon.");return}
+  if(!n){CATS.splice(i,1);render(true);toast(`Rayon « ${c} » supprimé.`);return}
+  layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Supprimer le rayon"><div class="top"><div><h2>Supprimer « ${esc(c)} »</h2><p>${n} produit${n>1?"s sont":" est"} dans ce rayon. Où les déplacer ?</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <select id="movecat">${CATS.filter(x=>x!==c).map(x=>`<option>${esc(x)}</option>`).join("")}</select>
+  <div class="row"><button class="btn bad" data-delcatok="${i}">Déplacer et supprimer</button><button class="btn" data-close="1">Annuler</button></div></div>`,true)}
+SET.grossistes=()=>`<section class="panel"><header><div><h2>Les grossistes</h2><p>Le délai de livraison sert à calculer les commandes. Le numéro WhatsApp reçoit les bons de commande.</p></div></header>
+  <div>${Object.entries(FOUR).map(([k,f])=>{const n=P.filter(p=>p.f===k).length;return `<div class="set" style="flex-wrap:wrap">
+    <div class="field" style="flex:1 1 160px"><label>Nom</label><input type="text" data-four="${k}|n" value="${esc(f.n)}"></div>
+    <div class="field"><label>Livré en (jours)</label><input type="number" class="qin" min="0" data-four="${k}|d" value="${f.d}"></div>
+    <div class="field" style="flex:1 1 140px"><label>WhatsApp du commercial</label><input type="tel" data-four="${k}|wa" value="${esc(f.wa||"")}" placeholder="77 …"></div>
+    <div class="field"><label>Reprend les produits</label>${sw(`data-fret="${k}"`,f.ret,"Reprend les produits")}</div>
+    <span class="muted">${n} produit${n>1?"s":""}</span>${n?"":`<button class="btn sm bad" data-delfour="${k}">Supprimer</button>`}</div>`}).join("")}</div>
+  <div class="row"><input type="text" id="newfour" placeholder="Nouveau grossiste" style="flex:1 1 220px"><button class="btn pri" data-act="addfour">Ajouter le grossiste</button></div></section>`;
+SET.regles=()=>{const c=S.cfg,num=(k,l,h,min,max,unit)=>`<div class="set"><div class="grow"><b>${l}</b><small>${h}</small></div><span class="row" style="gap:6px;flex-wrap:nowrap"><input type="number" class="qin" data-cfg="${k}" min="${min}" max="${max}" value="${c[k]}" aria-label="${esc(l)}"><span class="muted">${unit}</span></span></div>`;
+  return `<section class="panel"><header><div><h2>Péremptions et stock</h2><p>Garab applique ces règles à toutes les alertes et suggestions.</p></div></header>
+    ${num("alertJ","Alerter avant la péremption","Les lots entrent dans les alertes ce nombre de jours avant leur date.",15,365,"jours")}
+    ${num("recepMois","Péremption courte à la réception","En dessous, Garab vous conseille de refuser le lot ou de négocier un retour.",1,24,"mois")}
+    ${num("secu","Stock de sécurité","Jours de ventes gardés en plus du délai du grossiste pour calculer le seuil d'alerte.",0,30,"jours")}
+    ${num("couv","Commandes : couvrir","Nombre de jours de ventes couverts par une commande suggérée.",3,60,"jours")}</section>
+  <section class="panel"><header><div><h2>Caisse</h2></div></header>
+    ${num("tp","Part prise en charge par l'assurance","Taux par défaut du tiers payant (IPM, mutuelles, CMU).",0,100,"%")}
+    ${Object.keys(c.pays).map(m=>`<div class="set"><div class="grow"><b>${m}</b><small>${m==="Assurance"?"Tiers payant":"Moyen de paiement accepté en caisse"}</small></div>${sw(`data-paym="${m}"`,c.pays[m],m)}</div>`).join("")}</section>`};
+
 /* ---------- Événements ---------- */
 document.addEventListener("click",e=>{const t=e.target.closest("button,[data-prod],[data-close]");if(!t)return;const d=t.dataset;
   if(d.close&&(e.target===t)){closeLayer();return}
@@ -792,6 +942,18 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(d.recv){recevoir(d.recv);return}
   if(d.recok){valRecep(d.recok);return}
   if(d.pm){payer(d.pm);return}
+  if(d.pinok){const u=S.users.find(x=>x.id===+d.pinok);if(document.getElementById("pin").value===u.pin)switchUser(u);else{toast("Code incorrect.");document.getElementById("pin").value=""}return}
+  if(d.rem!=null&&d.rem!==undefined&&t.closest(".ticket")){S.remise=+d.rem;render(true);return}
+  if(d.stab){S.setTab=d.stab;render(true);return}
+  if(d.member){member(+d.member);return}
+  if(d.saveuser){saveUser(+d.saveuser);return}
+  if(d.toggleuser){const u=S.users.find(x=>x.id===+d.toggleuser);if(u.id===S.uid){toast("Vous ne pouvez pas vous désactiver vous-même.");return}u.actif=!u.actif;render(true);toast(`${u.nom} ${u.actif?"réactivé":"désactivé : il ne peut plus se connecter"}.`);return}
+  if(d.delcat){delCat(+d.delcat);return}
+  if(d.delcatok){const c=CATS[+d.delcatok],to=document.getElementById("movecat").value;P.forEach(p=>{if(p.cat===c)p.cat=to});CATS.splice(+d.delcatok,1);if(S.invCat===c)S.invCat=to;if(S.fcat===c)S.fcat="";closeLayer();render(true);toast(`Rayon « ${c} » supprimé, produits déplacés dans « ${to} ».`);return}
+  if(d.delfour){const f=FOUR[d.delfour];delete FOUR[d.delfour];render(true);toast(`${f.n} supprimé.`);return}
+  if(d.editprod){editProd(+d.editprod);return}
+  if(d.saveprod!==undefined){saveProd(+d.saveprod);return}
+  if(d.delprod){const p=byId(d.delprod);P.splice(P.indexOf(p),1);closeLayer();render(true);toast(`${p.nom} supprimé.`);return}
   if(d.plan){payer(null,d.plan);return}
   if(d.bill){S.bill=d.bill;render(true);return}
   if(d.retire){const{p,l}=findLot(d.retire);S.pertes.push({p,n:l.n,q:l.q,v:l.q*p.pa});toast(`Lot ${l.n} retiré : ${l.q} × ${p.nom} mis en destruction (${fmt(l.q*p.pa)}).`);l.q=0;render(true);return}
@@ -808,6 +970,10 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(a==="scanmanual"){S.cur={raw:"",kind:"Saisie manuelle",manual:true,gtin:"",lot:"",exp:"",serie:"",p:null};V_scanRes();return}
   if(a==="scanmode"){S.scanMode=d.m;document.querySelectorAll("[data-smode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.smode===S.scanMode));V_scanRes();return}
   if(a==="encaisser")return encaisser();
+  if(a==="newprod")return editProd(0);
+  if(a==="savepharma"){const g=k=>document.getElementById(k).value.trim();Object.assign(S.cfg,{nom:g("cnom")||S.cfg.nom,adr:g("cadr"),tel:g("ctel"),wa:g("cwa"),heure:/^\d{1,2}:\d{2}$/.test(g("cheure"))?g("cheure"):S.cfg.heure,ticket:g("cticket")});render(true);toast("Informations de la pharmacie enregistrées.");return}
+  if(a==="addcat"){const v=document.getElementById("newcat").value.trim();if(!v){toast("Indiquez le nom du rayon.");return}if(CATS.includes(v)){toast("Ce rayon existe déjà.");return}CATS.push(v);render(true);toast(`Rayon « ${v} » ajouté.`);return}
+  if(a==="addfour"){const v=document.getElementById("newfour").value.trim();if(!v){toast("Indiquez le nom du grossiste.");return}FOUR["g"+Date.now()]={n:v,d:2,ret:false,wa:""};render(true);toast(`${v} ajouté.`);return}
   if(a==="vider"){S.cart=[];render(true);return}
   if(a==="import")return toast("Envoyez votre fichier Excel ou l'export de votre ancien logiciel : on l'importe pour vous, gratuitement.");
   if(a==="feuille")return toast(`Feuille de comptage « ${S.invCat} » prête (démo).`);
@@ -819,7 +985,7 @@ document.addEventListener("click",e=>{const t=e.target.closest("button,[data-pro
   if(a==="more")return more();
   if(a==="toticket"){document.getElementById("ticket").scrollIntoView({behavior:"smooth",block:"start"});return}
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLayer();if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.prod)fiche(e.target.dataset.prod);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLayer();if(e.key==="Enter"&&e.target.id==="pin"){const b=document.querySelector("[data-pinok]");b&&b.click();return}if(e.key==="Enter"&&e.target.dataset&&e.target.dataset.prod)fiche(e.target.dataset.prod);
   if(e.key==="Enter"&&e.target.id==="cq"){const q=S.q.trim().toLowerCase(),p=P.find(p=>(p.nom+" "+p.pres).toLowerCase().includes(q)&&stock(p));if(q&&p){addCart(p.id);S.q="";render(true);document.getElementById("cq").focus()}}});
 document.addEventListener("input",e=>{const t=e.target;
   if(t.id==="cq"){S.q=t.value;fillRes();return}
@@ -828,8 +994,14 @@ document.addEventListener("input",e=>{const t=e.target;
   if(t.dataset.inv){S.inv[t.dataset.inv]=t.value===""?null:Math.max(0,parseInt(t.value)||0);invTotals();return}
   if(t.id&&t.id.startsWith("re")){const o=S.orders.find(x=>x.id===(document.querySelector("[data-recok]")||{}).dataset?.recok);o&&rwarn(o)}});
 document.addEventListener("change",e=>{const t=e.target;
-  if(t.id==="role"||t.id==="mrole"){S.role=t.value;S.view=navItems()[0][0];render();toast(t.value==="vendeur"?"Vue vendeur : caisse, stock et péremptions. Pas d'accès aux prix d'achat ni aux commandes.":"Vue titulaire : accès complet.");return}
+  if(t.id==="role"||t.id==="mrole"){const u=S.users.find(x=>x.id===+t.value);t.value=S.uid;if(u&&u.id!==S.uid)askPin(u);return}
   if(t.dataset.cq){render(true);return}
+  if(t.dataset.cat!==undefined){const i=+t.dataset.cat,old=CATS[i],v=t.value.trim();if(!v||v===old){t.value=old;return}if(CATS.includes(v)){toast("Ce rayon existe déjà.");t.value=old;return}P.forEach(p=>{if(p.cat===old)p.cat=v});CATS[i]=v;if(S.invCat===old)S.invCat=v;if(S.fcat===old)S.fcat=v;render(true);toast(`Rayon renommé : « ${v} ».`);return}
+  if(t.dataset.four){const[k,f]=t.dataset.four.split("|");FOUR[k][f]=f==="d"?Math.max(0,parseInt(t.value)||0):t.value.trim();toast(`${FOUR[k].n} : enregistré.`);return}
+  if(t.dataset.fret){FOUR[t.dataset.fret].ret=t.checked;toast(`${FOUR[t.dataset.fret].n} ${t.checked?"reprend":"ne reprend pas"} les produits.`);return}
+  if(t.dataset.cfg){const k=t.dataset.cfg,v=Math.max(+t.min,Math.min(+t.max,parseInt(t.value)||0));S.cfg[k]=v;t.value=v;if(k==="couv"){S.couv=v;S.cmdQ={}}nav();toast("Règle enregistrée : elle s'applique tout de suite.");return}
+  if(t.dataset.paym){const m=t.dataset.paym;S.cfg.pays[m]=t.checked;if(!payModes().length){S.cfg.pays[m]=true;t.checked=true;toast("Il faut garder au moins un moyen de paiement.");return}toast(`${m} : ${t.checked?"accepté":"désactivé"} en caisse.`);return}
+  if(t.id==="urole"){const pm=permOf(t.value);document.querySelectorAll("[data-perm]").forEach(c=>c.checked=pm[c.dataset.perm]);return}
   if(t.id==="scat"){S.fcat=t.value;fillStock();return}
   if(t.id==="sst"){S.fst=t.value;fillStock();return}
   if(t.id==="icat"){S.invCat=t.value;render(true);return}
