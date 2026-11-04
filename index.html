@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Garab Stock Pharmacie</title>
-<meta name="description" content="Démo de Garab : gestion de stock pour les pharmacies. Alertes de péremption, caisse, suggestions de commande, inventaire. En français, payé en Mobile Money.">
+<title>Wergui SN Pharmacie</title>
+<meta name="description" content="Démo de Wergui SN : gestion de stock pour les pharmacies. Alertes de péremption, caisse, suggestions de commande, inventaire. En français, payé en Mobile Money.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
@@ -287,7 +287,7 @@ input[type=text],input[type=search],input[type=number],input[type=date],input[ty
   <aside class="side">
     <div class="brand">
       <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="currentColor" opacity=".16"/><path d="M12 6h6v6h6v6h-6v6h-6v-6H6v-6h6z" fill="currentColor"/></svg>
-      <div><b>Garab</b><small>Stock pharmacie</small></div>
+      <div><b>Wergui SN</b><small>Stock pharmacie</small></div>
     </div>
     <button class="mrole" id="mrole" data-act="who" aria-label="Changer d'utilisateur"></button>
     <div class="role">
@@ -355,7 +355,7 @@ const permOf=r=>Object.fromEntries(PERMS.map(([k])=>[k,(ROLES[r]||{perm:[]}).per
 const S={role:"titulaire",uid:1,users:[{id:1,nom:"Dr Aïssatou Ndiaye",role:"titulaire",tel:"77 000 00 00",pin:"0000",actif:true},
     {id:2,nom:"Fatou Sarr",role:"adjoint",tel:"78 000 00 01",pin:"2468",actif:true,perm:permOf("adjoint")},
     {id:3,nom:"Moussa Diop",role:"vendeur",tel:"76 000 00 02",pin:"1234",actif:true,perm:permOf("vendeur")}],
-  cfg:{nom:"Pharmacie Keur Garab",adr:"Médina, Dakar",tel:"33 800 00 00",wa:"77 000 00 00",heure:"07:30",ticket:"Merci de votre visite. Bonne santé !",
+  cfg:{nom:"Pharmacie Keur Wergui",adr:"Médina, Dakar",tel:"33 800 00 00",wa:"77 000 00 00",heure:"07:30",ticket:"Merci de votre visite. Bonne santé !",
     alertJ:90,secu:4,couv:14,recepMois:6,tp:80,pays:{"Espèces":true,"Wave":true,"Orange Money":true,"Free Money":false,"Assurance":true}},
   setTab:"pharmacie",remise:0,view:"accueil",cart:[],pay:"Espèces",q:"",fcat:"",fst:"",perTab:"perimes",couv:14,cmdQ:{},invCat:CATS[0],inv:{},
   sales:[],hist:Array.from({length:13},()=>Math.round((190+rng()*140)*1000)),
@@ -463,7 +463,7 @@ V.accueil=()=>{const per=perimes(),s30=sous(0,30),s90=sous(0,S.cfg.alertJ),risk=
     <button class="kpi" data-go="commandes"><span>Ruptures · seuil bas</span><b class="num">${rup.length} · ${bas.length}</b><em>${sg.length} produit${sg.length>1?"s":""} à commander</em></button>
   </div>
   <div class="grid2">
-    <section class="panel"><header><div><h2>À faire aujourd'hui</h2><p>Garab regarde tout le stock chaque matin et vous dit quoi faire.</p></div></header>
+    <section class="panel"><header><div><h2>À faire aujourd'hui</h2><p>Wergui SN regarde tout le stock chaque matin et vous dit quoi faire.</p></div></header>
       <div class="list">${todo.map(([c,i,t,s,v,tab])=>`<div class="li"><span class="ic ${c}">${i}</span><div class="grow"><b>${t}</b><small>${esc(s)}</small></div><button class="btn sm" data-go="${v}" ${tab?`data-tab="${tab}"`:""}>Voir</button></div>`).join("")||'<p class="empty">Rien d\'urgent. Bonne journée !</p>'}</div>
     </section>
     <section class="panel"><header><div><h2>Résumé reçu sur WhatsApp</h2><p>Chaque matin à ${S.cfg.heure.replace(":"," h ")}, au ${esc(S.cfg.wa)}.</p></div></header>
@@ -487,7 +487,7 @@ V.accueil=()=>{const per=perimes(),s30=sous(0,30),s90=sous(0,S.cfg.alertJ),risk=
   </div>`};
 function resume(){const per=perimes(),s30=sous(0,30),rup=P.filter(p=>stock(p)===0),sg=sugList();
   const t=S.users.find(u=>u.role==="titulaire");
-  return `Garab · ${S.cfg.nom}
+  return `Wergui SN · ${S.cfg.nom}
 Bonjour ${short(t)}. Hier : ${fmt(S.hist[12])} de ventes.
 
 ⚠️ ${per.length} lot${per.length>1?"s":""} périmé${per.length>1?"s":""} à retirer
@@ -495,7 +495,7 @@ Bonjour ${short(t)}. Hier : ${fmt(S.hist[12])} de ventes.
 🚫 ${rup.length} rupture${rup.length>1?"s":""} : ${rup.map(p=>p.nom).join(", ")||"aucune"}
 🛒 ${sg.length} produit${sg.length>1?"s":""} à commander, bon de commande prêt
 
-Ouvrir : garab.sn/app`}
+Ouvrir l'application Wergui SN`}
 
 V.caisse=()=>{const top=[1,24,6,9,2,18,16,26];
   return head("Caisse","Les lots qui périment en premier sortent en premier. Un lot périmé ne peut pas être vendu.",`<button class="btn" data-go="scanner" data-mode="vente">Scanner une boîte</button>`)+
@@ -569,7 +569,7 @@ function fiche(id){const p=byId(id),[e,c]=etat(p),inv=invendus(p),sg=sugg(p);
 
 V.peremption=()=>{const tabs=[["perimes","Périmés",perimes()],["30","Moins de 30 jours",sous(0,30)],["90","30 à "+S.cfg.alertJ+" jours",sous(30,S.cfg.alertJ)],["inv","Invendables prévus",P.flatMap(invendus)]],cur=tabs.find(t=>t[0]===S.perTab),rows=cur[2];
   const val=rows.reduce((s,x)=>s+(S.perTab==="inv"?x.u:x.l.q)*x.p.pa,0);
-  const intro={perimes:"Ces lots sont bloqués à la caisse. Retirez-les des rayons et mettez-les en destruction.",30:"Dernière chance : retour au grossiste ou vente en priorité au comptoir.",90:"Il est encore temps de les écouler normalement. Garab les propose en premier à la caisse.",inv:"Garab compare le stock de chaque lot au rythme des ventes : voici ce qui restera sur les étagères à la date de péremption si rien ne change."}[S.perTab];
+  const intro={perimes:"Ces lots sont bloqués à la caisse. Retirez-les des rayons et mettez-les en destruction.",30:"Dernière chance : retour au grossiste ou vente en priorité au comptoir.",90:"Il est encore temps de les écouler normalement. Wergui SN les propose en premier à la caisse.",inv:"Wergui SN compare le stock de chaque lot au rythme des ventes : voici ce qui restera sur les étagères à la date de péremption si rien ne change."}[S.perTab];
   return head("Péremptions","Chaque lot est suivi avec sa date. Les alertes partent ${S.cfg.alertJ} jours avant.")+
   `<div class="seg" role="group" aria-label="Horizon">${tabs.map(([k,l,r])=>`<button data-per="${k}" aria-pressed="${S.perTab===k}">${l} (${r.length})</button>`).join("")}</div>
   <section class="panel"><header><div><h2>${cur[1]}</h2><p>${intro}</p></div><b class="num">${fmt(val)}</b></header>
@@ -583,7 +583,7 @@ V.peremption=()=>{const tabs=[["perimes","Périmés",perimes()],["30","Moins de 
 function findLot(k){const[pid,n]=k.split("|"),p=byId(pid);return{p,l:p.lots.find(l=>l.n===n)}}
 
 V.commandes=()=>{const att=S.orders.filter(o=>o.st==="attente"),sg=sugList(),fs=Object.keys(FOUR).filter(f=>sg.some(p=>p.f===f));
-  return head("Commandes","Garab calcule quoi commander à partir des ventes réelles, du stock et du délai de chaque grossiste.",
+  return head("Commandes","Wergui SN calcule quoi commander à partir des ventes réelles, du stock et du délai de chaque grossiste.",
   `<span class="lbl">Couvrir</span><div class="seg" role="group" aria-label="Couverture">${[7,14,30].map(n=>`<button data-couv="${n}" aria-pressed="${S.couv===n}">${n} jours</button>`).join("")}</div>`)+
   (att.length?`<section class="panel"><header><div><h2>Livraisons attendues</h2><p>Saisissez les lots et dates à la réception : les alertes de péremption en dépendent.</p></div></header>
    <div class="list">${att.map(o=>`<div class="li"><div class="grow"><b>${FOUR[o.f].n} · ${o.id}</b><small>Commandé le ${o.date} · ${o.lines.map(l=>l.q+" × "+byId(l.pid).nom).join(", ")}</small></div><button class="btn pri sm" data-recv="${o.id}">Réceptionner</button></div>`).join("")}</div></section>`:"")+
@@ -676,12 +676,12 @@ V.abonnement=()=>{const cur=plan(),an=S.bill==="an";
   <section class="panel"><header><h2>Pourquoi ça se rembourse</h2></header>
     <div class="list"><div class="li"><span>Produits jetés en octobre</span><b class="num" style="color:var(--bad)">${fmt(S.perteOct)}</b></div>
     <div class="li"><span>Abonnement ${cur.n}</span><b class="num">${fmt(cur.m)} / mois</b></div>
-    <div class="li"><span>Si Garab évite 1 lot jeté sur 4</span><b class="num" style="color:${S.perteOct/4-cur.m>0?"var(--ok)":"var(--warn)"}">${S.perteOct/4-cur.m>0?"+ ":""}${fmt(S.perteOct/4-cur.m)} / mois</b></div></div>
+    <div class="li"><span>Si Wergui SN évite 1 lot jeté sur 4</span><b class="num" style="color:${S.perteOct/4-cur.m>0?"var(--ok)":"var(--warn)"}">${S.perteOct/4-cur.m>0?"+ ":""}${fmt(S.perteOct/4-cur.m)} / mois</b></div></div>
     <p class="note-box">Sans compter les ventes perdues par rupture, et les jours d'inventaire à la main. L'inventaire de départ rembourse souvent une partie de l'installation : les lots presque périmés qu'il trouve peuvent encore être rendus au grossiste.</p></section></div>
   <section class="panel"><header><h2>Factures</h2></header><div class="tw"><table><thead><tr><th>Période</th><th>Payé par</th><th>Le</th><th class="r">Montant</th></tr></thead><tbody>
   ${S.invoices.map(i=>`<tr><td>${i[0]}</td><td>${i[1]}</td><td class="num">${i[2]}</td><td class="r num">${fmt(i[3]||15000)}</td></tr>`).join("")}</tbody></table></div></section>`};
 function payer(m,k){S.payM=m||S.payM||"Wave";if(k!==undefined)S.payPlan=k;const ch=S.payPlan?plan(S.payPlan):null,cur=plan(),an=S.bill==="an",x=ch||cur,amt=an?x.m*10:x.m;
-  layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Paiement"><div class="top"><div><h2>${ch?"Passer à "+ch.n:an?"Payer l'année suivante":"Payer décembre 2026"}</h2><p>Garab ${x.n} · ${an?"paiement annuel":"paiement mensuel"}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Paiement"><div class="top"><div><h2>${ch?"Passer à "+ch.n:an?"Payer l'année suivante":"Payer décembre 2026"}</h2><p>Wergui SN ${x.n} · ${an?"paiement annuel":"paiement mensuel"}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
   <div class="demo-band">Démo : aucun paiement n'est effectué.</div>
   <div class="recap"><div><span>Abonnement ${an?"décembre 2026 – novembre 2027":"décembre 2026"}</span><b class="num">${fmt(amt)}</b></div>
     ${ch?`<div><span>Installation</span><span class="muted">déjà faite · 0 F</span></div>`:""}<div class="t"><span>À payer</span><span class="num">${fmt(amt)}</span></div></div>
@@ -728,10 +728,10 @@ function V_scanRes(){const r=S.cur,el=document.getElementById("scanres");if(!el)
   if(r.kind==="Code-barres")msgs.push(["warn","Code-barres simple : il donne le produit, mais pas le lot ni la date. Saisissez-les ci-dessous."]);
   if(r.kind==="DataMatrix GS1"&&(!r.lot||!r.exp))msgs.push(["warn","Ce DataMatrix ne contient pas "+(!r.lot&&!r.exp?"le lot ni la date":!r.lot?"le n° de lot":"la date")+" : complétez à la main."]);
   if(!r.p&&r.medLoading)msgs.push(["n","Recherche du nom dans la base des médicaments…"]);
-  else if(!r.p&&r.med)msgs.push(["ok",m==="entree"?"Trouvé dans la base publique des médicaments. Pas encore dans votre stock : indiquez le prix de vente, Garab crée la fiche.":m==="vente"?"Trouvé dans la base des médicaments, mais pas dans votre stock : faites d'abord « Entrée en stock ».":"Trouvé dans la base publique des médicaments. Pas encore dans votre stock."]);
-  else if(!r.p&&r.medMiss)msgs.push(["warn","Code absent de la base publique française (produit importé d'un autre pays ?). Choisissez le produit, ou créez-le : Garab retiendra ce code."]);
+  else if(!r.p&&r.med)msgs.push(["ok",m==="entree"?"Trouvé dans la base publique des médicaments. Pas encore dans votre stock : indiquez le prix de vente, Wergui SN crée la fiche.":m==="vente"?"Trouvé dans la base des médicaments, mais pas dans votre stock : faites d'abord « Entrée en stock ».":"Trouvé dans la base publique des médicaments. Pas encore dans votre stock."]);
+  else if(!r.p&&r.medMiss)msgs.push(["warn","Code absent de la base publique française (produit importé d'un autre pays ?). Choisissez le produit, ou créez-le : Wergui SN retiendra ce code."]);
   else if(!r.p&&r.medNoBase)msgs.push(["warn","Base des médicaments indisponible (pas d'internet ?). Choisissez le produit, ou créez-le."]);
-  else if(!r.p&&r.kind!=="Autre code"&&!r.manual)msgs.push(["warn","Code inconnu dans votre stock. Choisissez le produit, ou créez-le : Garab retiendra ce code pour les prochaines fois."]);
+  else if(!r.p&&r.kind!=="Autre code"&&!r.manual)msgs.push(["warn","Code inconnu dans votre stock. Choisissez le produit, ou créez-le : Wergui SN retiendra ce code pour les prochaines fois."]);
   if(r.kind==="Autre code")msgs.push(["warn","Ce code n'est pas un code de médicament (GS1). Choisissez le produit à la main."]);
   el.className="panel "+(bad||r.dup?"scanbad":msgs.length?"scanwarn":"scanok");
   const sel=`<select id="sp" aria-label="Produit"><option value="">${m==="entree"?"— Nouveau produit —":"— Choisir le produit —"}</option>${P.map(p=>`<option value="${p.id}" ${r.p===p?"selected":""}>${p.nom} · ${p.pres}</option>`).join("")}</select>`;
@@ -911,7 +911,7 @@ FV.caisse=()=>{const c=FIN.caisse,att=especesAttendues(),modes=["Wave","Orange M
     <div class="tw"><table><thead><tr><th>Jour</th><th>Clôturé par</th><th class="r">Attendu</th><th class="r">Compté</th><th class="r">Écart</th></tr></thead><tbody>
     ${FIN.hist.map(([d,a,c,p])=>{const e=c-a;return `<tr><td class="num">${d}</td><td>${esc(p)}</td><td class="r num">${fmt(a)}</td><td class="r num">${fmt(c)}</td><td class="r"><span class="st ${e<0?"bad":e>0?"warn":"ok"}">${e?(e>0?"+ ":"− ")+fmt(Math.abs(e)):"Juste"}</span></td></tr>`}).join("")}</tbody></table></div></section>`};
 FV.assur=()=>{const orgs=FIN.orgs.map(o=>{const bs=FIN.bord.filter(b=>b.org===o),jour=S.sales.filter(v=>v.mode==="Assurance"&&v.org===o).reduce((s,v)=>s+v.tot*v.tp/100,0);return{o,bs,jour,du:bs.reduce((s,b)=>s+bordDu(b),0)+jour}});
-  return `<p class="note-box">Chaque vente au tiers payant s'ajoute au bordereau du mois de l'organisme. En fin de mois, Garab prépare le bordereau à envoyer. Vous suivez ensuite les paiements et les retards.</p>`+
+  return `<p class="note-box">Chaque vente au tiers payant s'ajoute au bordereau du mois de l'organisme. En fin de mois, Wergui SN prépare le bordereau à envoyer. Vous suivez ensuite les paiements et les retards.</p>`+
   orgs.map(({o,bs,jour,du})=>`<section class="panel"><header><div><h2>${esc(o)}</h2><p>${jour?`Novembre en cours : ${fmt(jour)} · `:""}${bs.filter(b=>bordDu(b)).length} bordereau${bs.filter(b=>bordDu(b)).length>1?"x":""} à encaisser</p></div><b class="num">${fmt(du)}</b></header>
     <div class="tw"><table><thead><tr><th>Bordereau</th><th>Mois</th><th>Statut</th><th class="r">Montant</th><th class="r">Reste dû</th><th></th></tr></thead><tbody>
     ${bs.map(b=>{const r=bordDu(b),a=ageJ(b.env),st=!r?'<span class="st ok">Payé</span>':!b.env?'<span class="st n">À envoyer</span>':a>60?`<span class="st bad">En retard · ${a} j</span>`:`<span class="st warn">Envoyé il y a ${a} j</span>`;
@@ -948,9 +948,9 @@ function exportCompta(){const L=[["Type","Date","Pièce","Libellé","Tiers","Mod
   FIN.dep.forEach(x=>L.push(["Dépense",dfr(x.d),"",x.lib,x.cat,x.mode,x.mt]));
   FIN.bord.forEach(b=>L.push(["Créance assurance","",b.id,"Bordereau "+b.mois,b.org,b.paye>=b.mt?"Payé":"À encaisser",b.mt]));
   const csv="﻿"+L.map(r=>r.map(c=>{c=String(c);return /[;"\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(";")).join("\r\n");
-  const fn="garab-comptable-2026-11.csv";
+  const fn="wergui-sn-comptable-2026-11.csv";
   if(DL){DL.save({filename:fn,data:csv}).then(()=>toast("Fichier pour le comptable enregistré (ouvrable dans Excel).")).catch(e=>toast(e&&e.code==="declined"?"Téléchargement annulé.":"Téléchargement indisponible sur cette page."));return}
-  try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="garab-comptable-2026-11.csv";document.body.appendChild(a);a.click();a.remove();
+  try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="wergui-sn-comptable-2026-11.csv";document.body.appendChild(a);a.click();a.remove();
     toast("Fichier pour le comptable téléchargé (ouvrable dans Excel). La version complète l'envoie aussi par e-mail chaque mois.")}catch(e){toast("Téléchargement impossible sur cette page.")}}
 function payModal(kind,id){const x=kind==="f"?FIN.fact.find(z=>z.id===id):FIN.bord.find(z=>z.id===id),reste=kind==="f"?resteFact(x):bordDu(x),av=kind==="f"?avoirsDe(x.f):0;
   layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Paiement"><div class="top"><div><h2>${kind==="f"?"Payer "+x.id:"Paiement reçu · "+x.id}</h2><p>${kind==="f"?esc(FOUR[x.f].n):esc(x.org)+" · "+x.mois} · reste ${fmt(reste)}</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
@@ -960,7 +960,7 @@ function payModal(kind,id){const x=kind==="f"?FIN.fact.find(z=>z.id===id):FIN.bo
   <div class="row"><button class="btn pri" data-payok="${kind}|${x.id}">Enregistrer</button><button class="btn" data-close="1">Annuler</button></div></div>`,true)}
 
 /* ---------- Changement d'utilisateur (code PIN) ---------- */
-function whoPick(){layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Qui utilise Garab ?"><div class="top"><div><h2>Qui utilise Garab ?</h2><p>Chacun se connecte avec son code. Les ventes sont enregistrées à son nom.</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+function whoPick(){layer(`<div class="modal" role="dialog" aria-modal="true" aria-label="Qui utilise Wergui SN ?"><div class="top"><div><h2>Qui utilise Wergui SN ?</h2><p>Chacun se connecte avec son code. Les ventes sont enregistrées à son nom.</p></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
   <div style="display:flex;flex-direction:column;gap:8px">${S.users.filter(u=>u.actif).map(u=>`<button class="pick" data-pick="${u.id}" aria-current="${u.id===S.uid}"><span class="av">${initials(u)}</span><span class="nm"><b>${esc(u.nom)}</b><small>${roleName(u)}</small></span>${u.id===S.uid?'<span class="st ok">connecté</span>':""}</button>`).join("")}</div>
   ${isTit()?'<button class="btn" data-go="parametres" data-stabgo="equipe">Gérer l\'équipe</button>':""}</div>`,true)}
 function askPin(u){if(!u.pin){switchUser(u);return}
@@ -985,7 +985,7 @@ function editProd(id){const p=id?byId(id):null,v=(k,d="")=>p?esc(p[k]):d;
     <div class="field"><label for="pseuil">Seuil d'alerte (boîtes)</label><input type="number" id="pseuil" min="0" inputmode="numeric" value="${p&&p.seuilMan?p.seuilMan:""}" placeholder="auto${p?" : "+Math.ceil(p.vj*(FOUR[p.f].d+S.cfg.secu)):""}"></div>
     <div class="field"><label for="pcode">Code-barres / CIP</label><input type="text" id="pcode" inputmode="numeric" value="${p?esc((p.gtins[0]||p.gtin||"").replace(/^0/,"")):""}"></div>
   </div>
-  <p class="note-box">Laissez le seuil vide : Garab le calcule tout seul à partir des ventes et du délai du grossiste.</p>
+  <p class="note-box">Laissez le seuil vide : Wergui SN le calcule tout seul à partir des ventes et du délai du grossiste.</p>
   <div class="row"><button class="btn pri" data-saveprod="${p?p.id:0}">${p?"Enregistrer":"Créer le produit"}</button><button class="btn" data-close="1">Annuler</button>
   ${p&&!p.lots.some(l=>l.q)?`<button class="btn bad" data-delprod="${p.id}">Supprimer</button>`:""}</div></div>`)}
 function saveProd(id){const g=k=>document.getElementById(k).value.trim(),nom=g("pnom"),pv=parseInt(g("ppv"))||0,pa=parseInt(g("ppa"))||0,se=parseInt(g("pseuil"))||0,code=g("pcode").replace(/\D/g,"");
@@ -1053,9 +1053,9 @@ SET.grossistes=()=>`<section class="panel"><header><div><h2>Les grossistes</h2><
     <span class="muted">${n} produit${n>1?"s":""}</span>${n?"":`<button class="btn sm bad" data-delfour="${k}">Supprimer</button>`}</div>`}).join("")}</div>
   <div class="row"><input type="text" id="newfour" placeholder="Nouveau grossiste" style="flex:1 1 220px"><button class="btn pri" data-act="addfour">Ajouter le grossiste</button></div></section>`;
 SET.regles=()=>{const c=S.cfg,num=(k,l,h,min,max,unit)=>`<div class="set"><div class="grow"><b>${l}</b><small>${h}</small></div><span class="row" style="gap:6px;flex-wrap:nowrap"><input type="number" class="qin" data-cfg="${k}" min="${min}" max="${max}" value="${c[k]}" aria-label="${esc(l)}"><span class="muted">${unit}</span></span></div>`;
-  return `<section class="panel"><header><div><h2>Péremptions et stock</h2><p>Garab applique ces règles à toutes les alertes et suggestions.</p></div></header>
+  return `<section class="panel"><header><div><h2>Péremptions et stock</h2><p>Wergui SN applique ces règles à toutes les alertes et suggestions.</p></div></header>
     ${num("alertJ","Alerter avant la péremption","Les lots entrent dans les alertes ce nombre de jours avant leur date.",15,365,"jours")}
-    ${num("recepMois","Péremption courte à la réception","En dessous, Garab vous conseille de refuser le lot ou de négocier un retour.",1,24,"mois")}
+    ${num("recepMois","Péremption courte à la réception","En dessous, Wergui SN vous conseille de refuser le lot ou de négocier un retour.",1,24,"mois")}
     ${num("secu","Stock de sécurité","Jours de ventes gardés en plus du délai du grossiste pour calculer le seuil d'alerte.",0,30,"jours")}
     ${num("couv","Commandes : couvrir","Nombre de jours de ventes couverts par une commande suggérée.",3,60,"jours")}</section>
   <section class="panel"><header><div><h2>Caisse</h2></div></header>

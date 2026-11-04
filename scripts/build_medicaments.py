@@ -19,7 +19,7 @@ def lire(nom, dossier):
         data, err = None, None
         for b in BASES:
             try:
-                req = urllib.request.Request(b.format(f=nom), headers={"User-Agent": "Mozilla/5.0 (Garab demo)"})
+                req = urllib.request.Request(b.format(f=nom), headers={"User-Agent": "Mozilla/5.0 (Wergui SN demo)"})
                 data = urllib.request.urlopen(req, timeout=120).read()
                 if len(data) > 10000 and b"<html" not in data[:500].lower():
                     break

@@ -1,4 +1,4 @@
-# Garab – stock pharmacie (démo)
+# Wergui SN – stock pharmacie (démo)
 
 Prototype cliquable d'un logiciel de gestion de stock pour les pharmacies, en français, payé en Mobile Money.
 
