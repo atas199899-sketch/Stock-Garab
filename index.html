@@ -697,7 +697,7 @@ function gsChk(b){let s=0;for(let i=0;i<b.length;i++)s+=(+b[b.length-1-i])*(i%2?
 P.forEach(p=>{const b="0200999"+String(p.id).padStart(6,"0");p.gtin=b+gsChk(b);p.gtins=[]}); // codes fictifs (préfixe 200 = usage interne)
 const findGtin=g=>g&&P.find(p=>p.gtin===g||p.gtins.includes(g));
 /* Base publique des médicaments (France) : code CIP13 -> [nom, forme, présentation], construite par GitHub Actions */
-const MEDURL=/github\.io$/.test(location.hostname)?"medicaments.json":"https://atas199899-sketch.github.io/Stock-Garab/medicaments.json";
+const MEDURL=/github\.io$/.test(location.hostname)?"medicaments.json":"https://atas199899-sketch.github.io/Wergui-SN/medicaments.json";
 let MEDP=null;const loadMed=()=>MEDP||(MEDP=fetch(MEDURL).then(r=>r.ok?r.json():null).catch(()=>null));
 const cipOf=g=>g&&g.length===14&&g.startsWith("0340")?g.slice(1):null;
 S.scanMode="entree";S.scans=[];S.serials=new Set();S.cur=null;S.cam=null;
